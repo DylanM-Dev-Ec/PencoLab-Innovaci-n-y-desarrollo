@@ -48,8 +48,14 @@ export default function RootHub({
         </p>
         <div className="hub-status">
           <span className={online ? 'ok' : 'off'}>{online ? 'Online' : 'Offline'}</span>
-          <span className={apiOk ? 'ok' : 'off'}>API {apiOk ? 'lista' : 'local'}</span>
+          <span className={apiOk ? 'ok' : 'off'}>{apiOk ? 'API lista' : 'Demo local'}</span>
         </div>
+        {!apiOk && (
+          <p className="hub-api-hint">
+            Sin backend en la nube: puedes probar todas las pantallas con datos demo. El sync real
+            requiere Render + <code>VITE_API_URL</code>.
+          </p>
+        )}
       </header>
 
       <main className="hub-main">

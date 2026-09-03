@@ -4,6 +4,10 @@
  * - Local: vacío → rutas relativas /api (proxy de Vite a :8000)
  */
 const API_BASE = String(import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const IS_PROD = Boolean(import.meta.env.PROD);
+
+/** En Vercel sin VITE_API_URL no hay backend: evitar pegarle a la propia SPA (/api → 405). */
+export const API_CONFIGURED = Boolean(API_BASE) || !IS_PROD;
 
 const API_V1 = `${API_BASE}/api/v1`;
 const API_ROOT = `${API_BASE}/api`;
@@ -14,10 +18,16 @@ function parseError(err) {
   if (Array.isArray(err.detail)) {
     return err.detail.map((d) => d.msg || JSON.stringify(d)).join('; ');
   }
+  if (err.status === 405) {
+    return 'API no disponible (405). Configura VITE_API_URL o usa modo demo local.';
+  }
   return `Error ${err.status || ''}`.trim();
 }
 
 async function request(path, options = {}, base = API_V1) {
+  if (!API_CONFIGURED) {
+    throw new Error('API no configurada. Entra en modo demo o define VITE_API_URL en Vercel.');
+  }
   const { token, headers: extraHeaders, ...rest } = options;
   const headers = { 'Content-Type': 'application/json', ...extraHeaders };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -32,6 +42,7 @@ async function request(path, options = {}, base = API_V1) {
 }
 
 export async function checkHealth() {
+  if (!API_CONFIGURED) return false;
   try {
     await request('/v1/health', {}, API_ROOT);
     return true;

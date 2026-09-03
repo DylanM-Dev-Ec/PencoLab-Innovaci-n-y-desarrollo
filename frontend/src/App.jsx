@@ -141,11 +141,23 @@ export default function App() {
 
   async function onQuickLogin(portal) {
     const account = portal === 'empresa' ? MY_ACCOUNT.empresa : MY_ACCOUNT.productor
-    const auth = await loginUser({
-      email: account.email,
-      password: MY_ACCOUNT.password,
-    })
-    onLogin(auth)
+    try {
+      const auth = await loginUser({
+        email: account.email,
+        password: MY_ACCOUNT.password,
+      })
+      onLogin(auth)
+    } catch {
+      // Sin backend en la nube: demo local para que el equipo pruebe la UI
+      onLogin({
+        access_token: `demo-local-${portal}`,
+        id: portal === 'empresa' ? 2 : 1,
+        rol: account.rol,
+        productor_id:
+          portal === 'productor' ? '00000000-0000-4000-8000-000000000001' : null,
+        email: account.email,
+      })
+    }
   }
 
   function reloadDemo() {

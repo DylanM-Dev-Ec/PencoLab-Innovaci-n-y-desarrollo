@@ -430,6 +430,19 @@ body.agro-page {
 }
 .hub-status span.ok { color: #0d4f36; border-color: #cfe5d8; background: #ecf6f0; }
 .hub-status span.off { color: #c9782a; border-color: #f3dfc4; background: #fff8ef; }
+.hub-api-hint {
+  margin: 10px auto 0;
+  max-width: 36rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+.hub-api-hint code {
+  font-size: 0.82em;
+  background: #f1f5f4;
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+}
 .hub-main { max-width: 520px; margin: 0 auto; }
 .hub-apps {
   display: grid;
