@@ -35,6 +35,7 @@ def create_access_token(*, user_id: int, rol: str, productor_id: UUID | None) ->
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
+        "id_usuario": user_id,
         "id": user_id,
         "rol": rol,
         "productor_id": str(productor_id) if productor_id else None,
@@ -57,13 +58,27 @@ def decode_token(token: str) -> dict:
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Usuario:
     payload = decode_token(token)
-    user_id = payload.get("id") or payload.get("sub")
+    user_id = payload.get("id_usuario") or payload.get("id") or payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token sin identificador")
     user = db.get(Usuario, int(user_id))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado")
     return user
+
+
+def require_roles(*roles: str):
+    allowed = set(roles)
+
+    def _checker(user: Usuario = Depends(get_current_user)) -> Usuario:
+        if rol_value(user.rol) not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para acceder a este recurso",
+            )
+        return user
+
+    return _checker
 
 
 def productor_id_for_user(db: Session, user: Usuario) -> UUID | None:

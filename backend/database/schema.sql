@@ -286,3 +286,104 @@ LEFT JOIN analisis_suelo as2 ON as2.parcela_id = p.id
         SELECT MAX(fecha_analisis) FROM analisis_suelo WHERE parcela_id = p.id
     )
 GROUP BY p.id, p.nombre, p.area_hectareas;
+
+-- ============================================================
+-- 11. CERTIFICACIÓN DE LOTE (Método Mexicano)
+-- parcela_id UUID para alinearse con el esquema actual de parcelas
+-- puntuacion_calidad: 0.00–1.00 (>0.90 = pago preferencial)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS certificacion_lote (
+    id SERIAL PRIMARY KEY,
+    parcela_id UUID NOT NULL REFERENCES parcelas(id) ON DELETE CASCADE,
+    hijuelos_seleccionados_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    herramientas_desinfectadas BOOLEAN NOT NULL DEFAULT FALSE,
+    cicatrizacion_sol_completa BOOLEAN NOT NULL DEFAULT FALSE,
+    trazo_tres_metros_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_certificacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    puntuacion_calidad NUMERIC(3, 2) NOT NULL DEFAULT 0.00
+        CHECK (puntuacion_calidad >= 0 AND puntuacion_calidad <= 1),
+    apto_pago_preferencial BOOLEAN NOT NULL DEFAULT FALSE,
+    estado VARCHAR(120) NOT NULL DEFAULT 'no_apto',
+    notas TEXT
+);
+
+CREATE INDEX IF NOT EXISTS ix_certificacion_lote_parcela_id ON certificacion_lote(parcela_id);
+
+-- ============================================================
+-- 12. AGAVE ANDINO — Economía circular, vivero y recolección
+-- (.cursorrules: NUEVAS REGLAS OPERATIVAS Y COMERCIALES)
+-- ============================================================
+
+-- Extender parcelas (topografía anti-erosión + meta 20 ha)
+ALTER TABLE parcelas
+    ADD COLUMN IF NOT EXISTS tipo_trazado VARCHAR(20)
+        CHECK (tipo_trazado IS NULL OR tipo_trazado IN ('laderas', 'zanjas', 'plano')),
+    ADD COLUMN IF NOT EXISTS metas_expansion_ha NUMERIC(8, 2) NOT NULL DEFAULT 20.0;
+
+-- Propagación mixta en plantas
+ALTER TABLE plantas
+    ADD COLUMN IF NOT EXISTS tipo_propagacion VARCHAR(20) NOT NULL DEFAULT 'hijuelo'
+        CHECK (tipo_propagacion IN ('hijuelo', 'semilla'));
+
+-- Vivero de semillas (germinación teórica ~5%)
+CREATE TABLE IF NOT EXISTS vivero_semillas (
+    id SERIAL PRIMARY KEY,
+    lote_semillas VARCHAR(120) NOT NULL,
+    fecha_siembra DATE NOT NULL,
+    cantidad_sembradas INT NOT NULL DEFAULT 0 CHECK (cantidad_sembradas >= 0),
+    cantidad_germinadas INT NOT NULL DEFAULT 0 CHECK (cantidad_germinadas >= 0),
+    tasa_germinacion_real NUMERIC(6, 2)
+        CHECK (tasa_germinacion_real IS NULL OR (tasa_germinacion_real >= 0 AND tasa_germinacion_real <= 100)),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS ix_vivero_semillas_lote ON vivero_semillas(lote_semillas);
+
+-- Recolección femenina de chawarmishky (Pacto de Verano)
+CREATE TABLE IF NOT EXISTS recoleccion_jornada (
+    id SERIAL PRIMARY KEY,
+    recolectora_nombre VARCHAR(120) NOT NULL,
+    fecha_recoleccion DATE NOT NULL,
+    litros_extraidos NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (litros_extraidos >= 0),
+    temperatura_clima NUMERIC(5, 2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS ix_recoleccion_jornada_nombre ON recoleccion_jornada(recolectora_nombre);
+CREATE INDEX IF NOT EXISTS ix_recoleccion_jornada_fecha ON recoleccion_jornada(fecha_recoleccion);
+
+-- Inventario de residuos (economía circular / valor agregado)
+CREATE TABLE IF NOT EXISTS inventario_residuos (
+    id SERIAL PRIMARY KEY,
+    planta_id UUID NOT NULL REFERENCES plantas(id) ON DELETE CASCADE,
+    tipo_residuo VARCHAR(40) NOT NULL
+        CHECK (tipo_residuo IN ('fibra_cabuya', 'flores_kirillas', 'chawarquero_madera', 'hoja_para_abono')),
+    cantidad_kg NUMERIC(10, 3) NOT NULL DEFAULT 0 CHECK (cantidad_kg >= 0),
+    destino_producto VARCHAR(40) NOT NULL
+        CHECK (destino_producto IN ('canastas', 'alpargatas', 'encurtidos', 'abono_compost', 'construccion_vigas')),
+    ingreso_adicional_usd NUMERIC(12, 2)
+        CHECK (ingreso_adicional_usd IS NULL OR ingreso_adicional_usd >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS ix_inventario_residuos_planta_id ON inventario_residuos(planta_id);
+
+-- Producción mensual / destilación ($2.00 USD por litro embotellado)
+CREATE TABLE IF NOT EXISTS produccion_mensual (
+    id SERIAL PRIMARY KEY,
+    productor_id UUID REFERENCES productores(id) ON DELETE SET NULL,
+    anio INT NOT NULL CHECK (anio >= 2000),
+    mes INT NOT NULL CHECK (mes >= 1 AND mes <= 12),
+    litros_destilados NUMERIC(12, 2)
+        CHECK (litros_destilados IS NULL OR litros_destilados >= 0),
+    botellas_producidas_2usd INT
+        CHECK (botellas_producidas_2usd IS NULL OR botellas_producidas_2usd >= 0),
+    ingreso_ventas_usd NUMERIC(14, 2)
+        CHECK (ingreso_ventas_usd IS NULL OR ingreso_ventas_usd >= 0),
+    notas TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS ix_produccion_mensual_productor_id ON produccion_mensual(productor_id);
+CREATE INDEX IF NOT EXISTS ix_produccion_mensual_periodo ON produccion_mensual(anio, mes);

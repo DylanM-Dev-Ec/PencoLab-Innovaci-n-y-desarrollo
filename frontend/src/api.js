@@ -1,5 +1,12 @@
-const API_V1 = '/api/v1';
-const API_ROOT = '/api';
+/**
+ * Base URL del API.
+ * - Producción (Vercel): VITE_API_URL = https://tu-api.onrender.com
+ * - Local: vacío → rutas relativas /api (proxy de Vite a :8000)
+ */
+const API_BASE = String(import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
+const API_V1 = `${API_BASE}/api/v1`;
+const API_ROOT = `${API_BASE}/api`;
 
 function parseError(err) {
   if (!err) return 'Error desconocido';
@@ -49,8 +56,53 @@ export async function syncPush(payload, token) {
   return request('/sync/push', { method: 'POST', body: JSON.stringify(payload), token });
 }
 
-export async function syncPull(productorId, since, token) {
-  const params = new URLSearchParams({ productor_id: productorId });
-  if (since) params.set('since', since);
-  return request(`/sync/pull?${params}`, { token });
+export async function pushPlanAccion(plan, token) {
+  const body = {
+    id: plan.id || undefined,
+    productor_id: plan.productor_id,
+    hectareas_planificadas: plan.hectareas_planificadas ?? plan.hectareas,
+    cultivo_intercalado_elegido: plan.cultivo_intercalado_elegido || plan.cultivo_intercalado,
+    latitud_inicial: plan.latitud_inicial ?? null,
+    longitud_inicial: plan.longitud_inicial ?? null,
+    fecha_inicio_plan: plan.fecha_inicio_plan || (plan.created_at || '').slice(0, 10) || undefined,
+    densidad_plantas_ha: plan.densidad_plantas_ha || 1000,
+  };
+  return request('/planes-accion', { method: 'POST', body: JSON.stringify(body), token }, API_ROOT);
+}
+
+export async function fetchEmpresaDashboard(token) {
+  return request('/empresa/dashboard', { token });
+}
+
+export async function fetchEmpresaParcelas(token) {
+  return request('/empresa/parcelas', { token });
+}
+
+export async function fetchEmpresaAlertas(token) {
+  return request('/empresa/alertas', { token });
+}
+
+export async function fetchDashboardStats(token) {
+  return request('/dashboard/stats', { token }, API_ROOT);
+}
+
+export async function fetchDashboardCrecimiento(token, { productorId, plantaId } = {}) {
+  const params = new URLSearchParams();
+  if (productorId) params.set('productor_id', productorId);
+  if (plantaId) params.set('planta_id', plantaId);
+  const qs = params.toString();
+  return request(`/dashboard/crecimiento${qs ? `?${qs}` : ''}`, { token }, API_ROOT);
+}
+
+export async function fetchDashboardAlertas(token) {
+  return request('/dashboard/alertas', { token }, API_ROOT);
+}
+
+export async function fetchDashboardEficiencia(token, hectareas = 1) {
+  const params = new URLSearchParams({ hectareas: String(hectareas) });
+  return request(`/dashboard/eficiencia-mexico?${params}`, { token }, API_ROOT);
+}
+
+export async function certificarLote(payload, token) {
+  return request('/certificar', { method: 'POST', body: JSON.stringify(payload), token }, API_ROOT);
 }

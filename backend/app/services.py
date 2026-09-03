@@ -17,7 +17,9 @@ from app.schemas import (
     ProductorCreate,
     ProductorUpdate,
 )
-from app.utils.agronomia import estimar_carbono, hijuelo_es_apto, recomendacion_ph
+from app.models.enums import TipoCarbono
+from app.utils.agronomia import hijuelo_es_apto, recomendacion_ph
+from app.utils.carbono import calcular_carbono_in_situ, estimar_carbono_teorico
 
 
 def utcnow() -> datetime:
@@ -95,7 +97,9 @@ def create_parcela(db: Session, payload: ParcelaCreate, *, mark_synced: bool = T
     return parcela
 
 
-def update_parcela(db: Session, parcela: Parcela, payload: ParcelaUpdate, *, mark_synced: bool = True) -> Parcela:
+def update_parcela(
+    db: Session, parcela: Parcela, payload: ParcelaUpdate, *, mark_synced: bool = True, commit: bool = True
+) -> Parcela:
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(parcela, field, value)
@@ -103,13 +107,16 @@ def update_parcela(db: Session, parcela: Parcela, payload: ParcelaUpdate, *, mar
         parcela.recomendacion_ph = recomendacion_ph(parcela.ph)
     if mark_synced:
         parcela.synced_at = utcnow()
-    db.commit()
-    db.refresh(parcela)
+    if commit:
+        db.commit()
+        db.refresh(parcela)
+    else:
+        db.flush()
     return parcela
 
 
 def create_planta(db: Session, payload: PlantaCreate, *, mark_synced: bool = True) -> Planta:
-    get_parcela_or_404(db, payload.parcela_id)
+    parcela = get_parcela_or_404(db, payload.parcela_id)
     data = payload.model_dump()
     data["hijuelo_apto"] = hijuelo_es_apto(
         data.get("peso_hijuelo_kg"),
@@ -120,12 +127,18 @@ def create_planta(db: Session, payload: PlantaCreate, *, mark_synced: bool = Tru
         data["synced_at"] = utcnow()
     planta = Planta(**data)
     db.add(planta)
+    db.flush()
+    from app.routers.planes_accion import activar_planes_por_siembra_georef
+
+    activar_planes_por_siembra_georef(db, productor_id=parcela.productor_id, planta=planta)
     db.commit()
     db.refresh(planta)
     return planta
 
 
-def update_planta(db: Session, planta: Planta, payload: PlantaUpdate, *, mark_synced: bool = True) -> Planta:
+def update_planta(
+    db: Session, planta: Planta, payload: PlantaUpdate, *, mark_synced: bool = True, commit: bool = True
+) -> Planta:
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(planta, field, value)
@@ -136,8 +149,15 @@ def update_planta(db: Session, planta: Planta, payload: PlantaUpdate, *, mark_sy
     )
     if mark_synced:
         planta.synced_at = utcnow()
-    db.commit()
-    db.refresh(planta)
+    parcela = get_parcela_or_404(db, planta.parcela_id)
+    from app.routers.planes_accion import activar_planes_por_siembra_georef
+
+    activar_planes_por_siembra_georef(db, productor_id=parcela.productor_id, planta=planta)
+    if commit:
+        db.commit()
+        db.refresh(planta)
+    else:
+        db.flush()
     return planta
 
 
@@ -145,17 +165,23 @@ def apply_carbono(medicion: MedicionCrecimiento, calcular: bool) -> None:
     if not calcular:
         return
     tipo = medicion.tipo_carbono
-    if (tipo.value if hasattr(tipo, "value") else tipo) == "verificado_in_situ" and medicion.carbono_acumulado_kg is not None:
-        return
-    carbono = estimar_carbono(
-        medicion.altura_roseta_cm,
-        medicion.diametro_roseta_cm,
-        medicion.edad_planta_meses,
-    )
+    tipo_val = tipo.value if hasattr(tipo, "value") else tipo
+    if tipo_val == TipoCarbono.VERIFICADO_IN_SITU.value or medicion.carbono_verificado:
+        carbono = calcular_carbono_in_situ(medicion.altura_roseta_cm, medicion.numero_hojas)
+        medicion.carbono_verificado = True
+        medicion.tipo_carbono = TipoCarbono.VERIFICADO_IN_SITU.value
+        medicion.algoritmo_version = "alometrico_v1"
+    else:
+        carbono = estimar_carbono_teorico(
+            medicion.altura_roseta_cm,
+            medicion.diametro_roseta_cm,
+            medicion.edad_planta_meses,
+        )
+        medicion.carbono_verificado = False
+        medicion.algoritmo_version = "teorico_v1"
     medicion.biomasa_kg = carbono["biomasa_kg"]
     medicion.carbono_acumulado_kg = carbono["carbono_acumulado_kg"]
     medicion.co2_equivalente_kg = carbono["co2_equivalente_kg"]
-    medicion.algoritmo_version = "v1.0"
 
 
 def create_medicion(db: Session, payload: MedicionCreate, *, mark_synced: bool = True) -> MedicionCrecimiento:
@@ -172,7 +198,12 @@ def create_medicion(db: Session, payload: MedicionCreate, *, mark_synced: bool =
 
 
 def update_medicion(
-    db: Session, medicion: MedicionCrecimiento, payload: MedicionUpdate, *, mark_synced: bool = True
+    db: Session,
+    medicion: MedicionCrecimiento,
+    payload: MedicionUpdate,
+    *,
+    mark_synced: bool = True,
+    commit: bool = True,
 ) -> MedicionCrecimiento:
     data = payload.model_dump(exclude_unset=True, exclude={"calcular_carbono"})
     for field, value in data.items():
@@ -180,8 +211,11 @@ def update_medicion(
     apply_carbono(medicion, payload.calcular_carbono)
     if mark_synced:
         medicion.synced_at = utcnow()
-    db.commit()
-    db.refresh(medicion)
+    if commit:
+        db.commit()
+        db.refresh(medicion)
+    else:
+        db.flush()
     return medicion
 
 
@@ -205,13 +239,21 @@ def create_bitacora(db: Session, payload: BitacoraCreate, *, mark_synced: bool =
 
 
 def update_bitacora(
-    db: Session, bitacora: BitacoraCampo, payload: BitacoraUpdate, *, mark_synced: bool = True
+    db: Session,
+    bitacora: BitacoraCampo,
+    payload: BitacoraUpdate,
+    *,
+    mark_synced: bool = True,
+    commit: bool = True,
 ) -> BitacoraCampo:
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
         setattr(bitacora, field, value)
     if mark_synced:
         bitacora.synced_at = utcnow()
-    db.commit()
-    db.refresh(bitacora)
+    if commit:
+        db.commit()
+        db.refresh(bitacora)
+    else:
+        db.flush()
     return bitacora

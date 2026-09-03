@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import BitacoraCampo, MedicionCrecimiento, Parcela, Planta
+from app.routers.planes_accion import activar_planes_por_siembra_georef
 from app.schemas import (
     BitacoraRead,
     BitacoraUpdate,
@@ -48,6 +49,7 @@ def sync_push(payload: SyncPushPayload, db: Session = Depends(get_db)):
                 parcela,
                 ParcelaUpdate(**item.model_dump(exclude={"id", "productor_id"})),
                 mark_synced=True,
+                commit=False,
             )
         else:
             db.add(
@@ -68,6 +70,7 @@ def sync_push(payload: SyncPushPayload, db: Session = Depends(get_db)):
                 planta,
                 PlantaUpdate(**item.model_dump(exclude={"id", "parcela_id"})),
                 mark_synced=True,
+                commit=False,
             )
         else:
             data = item.model_dump(exclude={"id"})
@@ -77,7 +80,12 @@ def sync_push(payload: SyncPushPayload, db: Session = Depends(get_db)):
                 data.get("edad_planta_madre_anios"),
             )
             data["synced_at"] = now
-            db.add(Planta(id=item.id, **data))
+            planta_nueva = Planta(id=item.id, **data)
+            db.add(planta_nueva)
+            db.flush()
+            activar_planes_por_siembra_georef(
+                db, productor_id=payload.productor_id, planta=planta_nueva
+            )
 
     for item in payload.mediciones:
         medicion = db.get(MedicionCrecimiento, item.id)
@@ -92,10 +100,16 @@ def sync_push(payload: SyncPushPayload, db: Session = Depends(get_db)):
                     calcular_carbono=item.calcular_carbono,
                 ),
                 mark_synced=True,
+                commit=False,
             )
         else:
-            data = item.model_dump(exclude={"id", "calcular_carbono", "algoritmo_version"})
-            medicion = MedicionCrecimiento(id=item.id, planta_id=item.planta_id, synced_at=now, **data)
+            data = item.model_dump(exclude={"id", "planta_id", "calcular_carbono"})
+            medicion = MedicionCrecimiento(
+                id=item.id,
+                planta_id=item.planta_id,
+                synced_at=now,
+                **data,
+            )
             apply_carbono(medicion, item.calcular_carbono)
             db.add(medicion)
 
@@ -109,6 +123,7 @@ def sync_push(payload: SyncPushPayload, db: Session = Depends(get_db)):
                 bitacora,
                 BitacoraUpdate(**item.model_dump(exclude={"id", "productor_id", "parcela_id", "planta_id"})),
                 mark_synced=True,
+                commit=False,
             )
         else:
             db.add(
@@ -140,30 +155,43 @@ def sync_pull(
     """Descarga datos del servidor hacia el dispositivo móvil."""
     from datetime import datetime
 
+    from fastapi import HTTPException
+
     get_productor_or_404(db, productor_id)
     now = utcnow()
-    since_dt = datetime.fromisoformat(since) if since else None
+    since_dt = None
+    if since:
+        try:
+            since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=f"since inválido: {since}") from exc
 
+    # Parcelas del productor (filtro since solo en esta tabla)
     parcelas_q = db.query(Parcela).filter(Parcela.productor_id == productor_id)
     if since_dt:
         parcelas_q = parcelas_q.filter(Parcela.updated_at >= since_dt)
     parcelas = parcelas_q.all()
-    parcela_ids = [p.id for p in parcelas]
 
-    plantas: list[Planta] = []
-    if parcela_ids:
-        plantas_q = db.query(Planta).filter(Planta.parcela_id.in_(parcela_ids))
-        if since_dt:
-            plantas_q = plantas_q.filter(Planta.updated_at >= since_dt)
-        plantas = plantas_q.all()
+    # Plantas: todas las del productor (vía join), no solo las de parcelas filtradas
+    plantas_q = (
+        db.query(Planta)
+        .join(Parcela, Planta.parcela_id == Parcela.id)
+        .filter(Parcela.productor_id == productor_id)
+    )
+    if since_dt:
+        plantas_q = plantas_q.filter(Planta.updated_at >= since_dt)
+    plantas = plantas_q.all()
 
-    planta_ids = [p.id for p in plantas]
-    mediciones: list[MedicionCrecimiento] = []
-    if planta_ids:
-        mediciones_q = db.query(MedicionCrecimiento).filter(MedicionCrecimiento.planta_id.in_(planta_ids))
-        if since_dt:
-            mediciones_q = mediciones_q.filter(MedicionCrecimiento.created_at >= since_dt)
-        mediciones = mediciones_q.all()
+    # Mediciones: vía plantas del productor
+    mediciones_q = (
+        db.query(MedicionCrecimiento)
+        .join(Planta, MedicionCrecimiento.planta_id == Planta.id)
+        .join(Parcela, Planta.parcela_id == Parcela.id)
+        .filter(Parcela.productor_id == productor_id)
+    )
+    if since_dt:
+        mediciones_q = mediciones_q.filter(MedicionCrecimiento.created_at >= since_dt)
+    mediciones = mediciones_q.all()
 
     bitacora_q = db.query(BitacoraCampo).filter(BitacoraCampo.productor_id == productor_id)
     if since_dt:

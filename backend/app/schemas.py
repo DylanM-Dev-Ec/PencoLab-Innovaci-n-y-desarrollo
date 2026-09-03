@@ -1,19 +1,24 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.enums import (
+    DestinoProducto,
     EstadoBitacora,
     EstadoGeneralPlanta,
+    EstadoLote,
     EstadoPlanta,
     PermeabilidadSuelo,
     RolUsuario,
     TipoBitacora,
     TipoCarbono,
+    TipoPropagacion,
+    TipoResiduo,
     TipoSuelo,
+    TipoTrazado,
 )
 
 
@@ -71,7 +76,8 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    id: int
+    id_usuario: int
+    id: int | None = None  # alias compat
     rol: RolUsuario
     productor_id: UUID | None = None
     email: EmailStr
@@ -90,6 +96,9 @@ class ParcelaBase(BaseModel):
     ph: Decimal | None = Field(None, ge=0, le=14)
     tipo_suelo: TipoSuelo | None = None
     permeabilidad: PermeabilidadSuelo = PermeabilidadSuelo.MEDIA
+    tipo_trazado: TipoTrazado | None = None
+    metas_expansion_ha: Decimal = Field(default=Decimal("20.0"), gt=0)
+    estado_lote: EstadoLote | None = None
 
 
 class ParcelaCreate(ParcelaBase):
@@ -105,7 +114,9 @@ class ParcelaUpdate(BaseModel):
     ph: Decimal | None = Field(None, ge=0, le=14)
     tipo_suelo: TipoSuelo | None = None
     permeabilidad: PermeabilidadSuelo | None = None
-
+    tipo_trazado: TipoTrazado | None = None
+    metas_expansion_ha: Decimal | None = Field(None, gt=0)
+    estado_lote: EstadoLote | None = None
 
 class ParcelaRead(ParcelaBase, ORMModel):
     id: UUID
@@ -132,6 +143,7 @@ class PlantaBase(BaseModel):
     tratamiento_sanitario: bool = False
     fecha_corte_rizoma: date | None = None
     metodo_desinfeccion: str = "fuego"
+    tipo_propagacion: TipoPropagacion = TipoPropagacion.HIJUELO
     estado: EstadoPlanta = EstadoPlanta.ACTIVA
     notas: str | None = None
 
@@ -152,6 +164,7 @@ class PlantaUpdate(BaseModel):
     tratamiento_sanitario: bool | None = None
     fecha_corte_rizoma: date | None = None
     metodo_desinfeccion: str | None = None
+    tipo_propagacion: TipoPropagacion | None = None
     estado: EstadoPlanta | None = None
     notas: str | None = None
 
@@ -206,6 +219,7 @@ class MedicionUpdate(BaseModel):
 class MedicionRead(MedicionBase, ORMModel):
     id: UUID
     planta_id: UUID
+    carbono_verificado: bool = False
     algoritmo_version: str
     synced_at: datetime | None = None
     created_at: datetime
@@ -271,7 +285,7 @@ class SyncPlantaItem(PlantaBase):
 class SyncMedicionItem(MedicionBase):
     id: UUID
     planta_id: UUID
-    algoritmo_version: str = "v1.0"
+    algoritmo_version: str = "alometrico_v1"
     calcular_carbono: bool = True
 
 
@@ -306,3 +320,151 @@ class SyncPushResponse(BaseModel):
     plantas_procesadas: int = 0
     mediciones_procesadas: int = 0
     bitacora_procesadas: int = 0
+
+
+class SyncBitacoraBatchResponse(BaseModel):
+    sincronizado_en: datetime
+    recibidos: int
+    insertados: int
+    omitidos: int
+
+
+class IncentivoResponse(BaseModel):
+    productor_id: UUID
+    cumple_pacto_social: bool
+    plantas_sembradas_ultimo_anio: int
+    plantas_cosechadas_o_chawadas: int
+    califica_pago_preferencial: bool
+    multiplicador_precio: float
+    mensaje: str
+    detalle_incentivo: dict[str, Any]
+
+
+class CertificacionLoteCreate(BaseModel):
+    parcela_id: UUID
+    hijuelos_seleccionados_ok: bool = False
+    herramientas_desinfectadas: bool = False
+    cicatrizacion_sol_completa: bool = False
+    trazo_tres_metros_ok: bool = False
+    # Si no se envía, se calcula como (# checks true / 4) en escala 0–1
+    puntuacion_calidad: Decimal | None = Field(None, ge=0, le=1)
+    notas: str | None = None
+
+
+class CertificacionLoteRead(ORMModel):
+    id: int
+    parcela_id: UUID
+    hijuelos_seleccionados_ok: bool
+    herramientas_desinfectadas: bool
+    cicatrizacion_sol_completa: bool
+    trazo_tres_metros_ok: bool
+    fecha_certificacion: datetime
+    puntuacion_calidad: Decimal
+    apto_pago_preferencial: bool
+    estado: str
+    notas: str | None = None
+    mensaje: str | None = None
+    multiplicador_precio: float | None = None
+
+
+# --- Agave Andino: vivero, recolección, residuos, destilación ---
+
+
+class ViveroSemillaBase(BaseModel):
+    lote_semillas: str = Field(..., min_length=1, max_length=120)
+    fecha_siembra: date
+    cantidad_sembradas: int = Field(..., ge=0)
+    cantidad_germinadas: int = Field(0, ge=0)
+    tasa_germinacion_real: Decimal | None = Field(None, ge=0, le=100)
+
+
+class ViveroSemillaCreate(ViveroSemillaBase):
+    pass
+
+
+class ViveroSemillaRead(ViveroSemillaBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class RecoleccionJornadaBase(BaseModel):
+    recolectora_nombre: str = Field(..., min_length=1, max_length=120)
+    fecha_recoleccion: date
+    litros_extraidos: Decimal = Field(..., ge=0)
+    temperatura_clima: Decimal | None = None
+
+
+class RecoleccionJornadaCreate(RecoleccionJornadaBase):
+    pass
+
+
+class RecoleccionJornadaRead(RecoleccionJornadaBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class InventarioResiduoBase(BaseModel):
+    planta_id: UUID
+    tipo_residuo: TipoResiduo
+    cantidad_kg: Decimal = Field(..., ge=0)
+    destino_producto: DestinoProducto
+    ingreso_adicional_usd: Decimal | None = Field(None, ge=0)
+
+
+class InventarioResiduoCreate(InventarioResiduoBase):
+    pass
+
+
+class InventarioResiduoRead(InventarioResiduoBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class ProduccionMensualBase(BaseModel):
+    productor_id: UUID | None = None
+    anio: int = Field(..., ge=2000)
+    mes: int = Field(..., ge=1, le=12)
+    litros_destilados: Decimal | None = Field(None, ge=0)
+    botellas_producidas_2usd: int | None = Field(None, ge=0)
+    ingreso_ventas_usd: Decimal | None = Field(None, ge=0)
+    notas: str | None = None
+
+
+class ProduccionMensualCreate(ProduccionMensualBase):
+    pass
+
+
+class ProduccionMensualRead(ProduccionMensualBase, ORMModel):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class PlanAccionCreate(BaseModel):
+    id: UUID | None = None
+    productor_id: UUID
+    hectareas_planificadas: Decimal = Field(..., gt=0, le=20)
+    cultivo_intercalado_elegido: Literal["papa", "quinoa", "chocho"]
+    latitud_inicial: Decimal | None = None
+    longitud_inicial: Decimal | None = None
+    fecha_inicio_plan: date | None = None
+    densidad_plantas_ha: int = Field(1000, ge=500, le=3333)
+
+
+class PlanAccionRead(ORMModel):
+    id: UUID
+    productor_id: UUID
+    hectareas_planificadas: Decimal
+    cultivo_intercalado_elegido: str
+    latitud_inicial: Decimal | None = None
+    longitud_inicial: Decimal | None = None
+    fecha_inicio_plan: date
+    densidad_plantas_ha: int
+    estado: str
+    proyeccion_financiera: dict
+    proyeccion_carbono: dict
+    activado_en: datetime | None = None
+    planta_activadora_id: UUID | None = None
+    synced_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime

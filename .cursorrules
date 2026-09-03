@@ -34,3 +34,31 @@ Al generar cualquier lógica de recomendación, validación de formularios o int
 ## REQUERIMIENTOS TÉCNICOS
 - **Offline-First**: La base de datos local (SQLite o WatermelonDB) debe guardar las tareas diarias (riego, podas, fitosanitarios) georreferenciadas con GPS nativo de forma offline. Sincronizar automáticamente al backend al recuperar internet mediante un campo `synced_at`.
 - **Scouting Visual**: Módulo para tomar fotografías de hojas enfermas y clasificarlas (ej. puntos rojos indicando cochinillas, pudrición blanda de Erwinia, picudo).
+
+## NUEVAS REGLAS OPERATIVAS Y COMERCIALES (Agave Andino)
+
+1. **Especie y Topografía**:
+   - Especie objetivo: Penco andino (*Agave americana*) [3].
+   - Tipo de plantación: Terrenos marginales, laderas pronunciadas y trazado en zanjas/terrazas para evitar la erosión del suelo [5, 6].
+
+2. **Modelo de Propagación Mixto (Hijuelos + Semillas)**:
+   - La app debe rastrear tanto hijuelos como semillas [7].
+   - Nota científica: La semilla de penco tiene una tasa de germinación baja de aproximadamente el 5% [8]. Por ende, el vivero tecnificado debe monitorearse minuciosamente.
+
+3. **Operación de Cosecha y Género (Pacto de Verano)**:
+   - Durante la temporada seca/verano, se incrementa la concentración de azúcares y se realiza la destilación de la savia [6, 9].
+   - La recolección diaria de chawarmishky (promedio de 4 litros diarios por planta durante 2 meses) la realizan tradicionalmente mujeres [10, 11]. El modelo emplea a 3 mujeres recolectoras durante el periodo estival [1, 10].
+
+4. **Economía Circular y Aprovechamiento de Residuos (Valor Agregado)**:
+   - El residuo de la hoja de penco tras el chawado o deshoje debe procesarse para evitar desperdicios [11, 12].
+   - Opciones de aprovechamiento a integrar en la app:
+     * Extracción de fibra de cabuya para artesanías (canastas, bolsos) [13].
+     * Elaboración de suelas de alpargatas con cuerdas de cabuya [14, 15].
+     * Encurtido gourmet de las flores tiernas ("kirillas" o alcaparras de penco) [16].
+     * Conversión de hojas residuales y biomasa muerta en abonos orgánicos/compost [17].
+     * Uso de los troncos secos (chawarqueros) como vigas de eco-construcción o bases para tambores artesanales [4, 15].
+
+5. **Modelo Financiero y Escalabilidad**:
+   - Precio del producto final embotellado y destilado: $2.00 USD por litro.
+   - Hectáreas actuales: 3 ha. Meta de expansión sostenible: 20 ha.
+   - Meta ambiental de mitigación: 15 toneladas de CO2 equivalente capturadas demostrables.

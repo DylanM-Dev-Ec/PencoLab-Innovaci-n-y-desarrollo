@@ -1,6 +1,6 @@
 # PencoLab Frontend (Prototipo)
 
-Prototipo web mobile-first para gestión de cultivo de Penco con modo **offline-first**.
+Prototipo web con **hub raíz** y dos portales según rol JWT.
 
 ## Iniciar
 
@@ -10,16 +10,20 @@ npm install
 npm run dev
 ```
 
-Abre: http://localhost:5173
+Abre: http://localhost:5173 → `#/`
 
-## Pantallas
+## Rutas
 
-- **Inicio** — resumen, carbono total, sincronización
-- **Parcelas** — georreferenciación + pH con recomendación automática
-- **Plantas** — registro de hijuelos con validación agronómica
-- **Medir** — mediciones de crecimiento + estimación de carbono
-- **Bitácora** — riego, podas, fitosanitarios con GPS
+| Ruta | Pantalla |
+|---|---|
+| `#/` | Hub raíz: elige Agricultor o Empresa |
+| `#/login?portal=productor` | Login / registro productor |
+| `#/login?portal=empresa` | Login / registro empresa |
+| `#/productor` | Guía de siembra |
+| `#/productor/bitacora` | Bitácora offline |
+| `#/productor/metricas` | Métricas propias |
+| `#/empresa` | Dashboard CO₂ |
+| `#/empresa/mapa` | Mapa de parcelas |
+| `#/empresa/alertas` | Alertas fitosanitarias |
 
-## Offline-first
-
-Los datos se guardan en `localStorage`. Al pulsar **Sincronizar**, intenta enviar al backend en `localhost:8000` vía proxy Vite.
+Las rutas cruzadas se bloquean según el rol del token. Desde cada app puedes volver al hub con **Inicio**.

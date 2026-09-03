@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import settings
 from app.database import Base
-from app.models import BitacoraCampo, MedicionCrecimiento, Parcela, Planta, Productor, Usuario
+from app.models import BitacoraCampo, CertificacionLote, MedicionCrecimiento, Parcela, Planta, Productor, Usuario  # noqa: F401
 
 config = context.config
 

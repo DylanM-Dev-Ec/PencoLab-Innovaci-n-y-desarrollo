@@ -47,6 +47,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     token = create_access_token(user_id=user.id, rol=rol, productor_id=productor_id)
     return TokenResponse(
         access_token=token,
+        id_usuario=user.id,
         id=user.id,
         rol=rol,
         productor_id=productor_id,
@@ -65,6 +66,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token(user_id=user.id, rol=rol, productor_id=productor_id)
     return TokenResponse(
         access_token=token,
+        id_usuario=user.id,
         id=user.id,
         rol=rol,
         productor_id=productor_id,
