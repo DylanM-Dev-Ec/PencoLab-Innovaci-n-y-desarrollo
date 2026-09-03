@@ -1,0 +1,36 @@
+# Reglas de Desarrollo - App Penco (Pencos del Norte)
+
+Eres un experto en desarrollo móvil y web para agricultura de precisión. Tus tecnologías preferidas para este hackathon son React Native / Expo (para modo offline) o Flutter, y Node.js / FastAPI en el Backend con PostgreSQL o SQLite.
+
+## REGLAS DE NEGOCIO AGRONÓMICAS
+Al generar cualquier lógica de recomendación, validación de formularios o interfaces de usuario, debes forzar estas reglas científicas extraídas de las fuentes oficiales:
+
+1. **Preparación de Suelos**:
+   - pH óptimo para el Penco/Agave: entre 6.0 y 7.0.
+   - Si el pH ingresado es < 6, recomendar la aplicación de "cal y composta".
+   - Si el pH ingresado es > 8, recomendar la aplicación de "yeso o azufre".
+   - El suelo ideal debe ser franco, arenoso o arcilloso permeable para evitar el encharcamiento que pudre las raíces superficiales.
+
+2. **Selección y Tratamiento de Hijuelos (Propagación)**:
+   - Edad ideal de la planta madre: 3 a 5 años.
+   - Peso idóneo del hijuelo: 1.5 a 3.0 kg, o tamaño de roseta entre 8 y 11 cm. No usar hijuelos que se sientan "bofos".
+   - Protocolo de siembra: Corte del rizoma con machete o cuchillo desinfectado al fuego.
+   - Periodo de cicatrización al sol: 10 días antes de sembrar.
+   - Tratamiento sanitario previo: Mezcla de fungicida, bactericida e insecticida.
+
+3. **Manejo del Riego**:
+   - El riego debe ser comedido y parco.
+   - Invierno: Riego racionado al mínimo (mantener húmedo, no mojado).
+   - Primavera: Riego según la demanda del suelo (humedecer sin encharcar).
+   - Verano: Reducción paulatina para no ahogar la raíz. No regar en época lluviosa extrema para evitar problemas sanitarios.
+
+4. **Podas**:
+   - Poda sanitaria obligatoria: Eliminar únicamente hojas secas para evitar que sirvan de vehículo para parásitos (ej. picudo del agave, cochinilla).
+
+5. **Métricas de Crecimiento y Carbono**:
+   - Registrar obligatoriamente: altura de la roseta (cm), diámetro de la roseta (cm) y número de hojas (pencas).
+   - Estimación de Carbono: Implementar algoritmos para calcular la acumulación de biomasa basándose en la altura, diámetro y edad de la planta, distinguiendo "Carbono Estimado" de "Carbono Verificado in situ".
+
+## REQUERIMIENTOS TÉCNICOS
+- **Offline-First**: La base de datos local (SQLite o WatermelonDB) debe guardar las tareas diarias (riego, podas, fitosanitarios) georreferenciadas con GPS nativo de forma offline. Sincronizar automáticamente al backend al recuperar internet mediante un campo `synced_at`.
+- **Scouting Visual**: Módulo para tomar fotografías de hojas enfermas y clasificarlas (ej. puntos rojos indicando cochinillas, pudrición blanda de Erwinia, picudo).
