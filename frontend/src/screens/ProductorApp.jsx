@@ -22,6 +22,7 @@ import BitacoraCampo from './BitacoraCampo'
 import AnalisisCostos from './AnalisisCostos'
 import AnotarLote from './AnotarLote'
 import GuiaInteractiva, { GuiaErrorBoundary } from './GuiaInteractiva'
+import MercadoPropagacion from './MercadoPropagacion'
 import { AppIcon } from '../components/AppIcon'
 
 const NAV = [
@@ -42,6 +43,12 @@ const NAV = [
     icon: 'guia',
     label: 'Guía',
     desc: 'Aprende paso a paso cómo sembrar el penco andino',
+  },
+  {
+    path: '/productor/mercado',
+    icon: 'semilla',
+    label: 'Mercado',
+    desc: 'Hijuelos certificados, semillas y venta de excedentes',
   },
   {
     path: '/productor/circular',
@@ -346,6 +353,9 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
         )}
         {path === '/productor/circular' && (
           <EconomiaCircular data={data} onAdd={addRecords} mode="productor" />
+        )}
+        {path === '/productor/mercado' && (
+          <MercadoPropagacion data={data} onAdd={addRecords} setMsg={setMsg} />
         )}
         {path === '/productor/simular' && <SimulacionAgricola />}
         {path === '/productor/qr' && <QrLote data={data} scope={scope} />}

@@ -25,6 +25,8 @@ const defaultData = () => ({
   residuos: [],
   vivero_semillas: [],
   planes_accion: [],
+  mercado_solicitudes: [],
+  mercado_ofertas: [],
   lastSync: null,
 });
 
@@ -64,6 +66,8 @@ export function saveCampoSnapshot(data) {
     residuos: data.residuos || [],
     vivero_semillas: data.vivero_semillas || [],
     planes_accion: data.planes_accion || [],
+    mercado_solicitudes: data.mercado_solicitudes || [],
+    mercado_ofertas: data.mercado_ofertas || [],
     lastSync: data.lastSync || null,
     updated_at: new Date().toISOString(),
     source: 'productor',
@@ -119,6 +123,8 @@ export function clearSession(data) {
     residuos: data.residuos || [],
     vivero_semillas: data.vivero_semillas || [],
     planes_accion: data.planes_accion || [],
+    mercado_solicitudes: data.mercado_solicitudes || [],
+    mercado_ofertas: data.mercado_ofertas || [],
   };
 }
 
