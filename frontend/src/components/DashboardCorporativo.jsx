@@ -102,15 +102,18 @@ export default function DashboardCorporativo({ stats, residuos = [], campoData =
 
   const pctHa = Math.min(100, (haActual / HA_META) * 100)
 
-  const donut = [
-    { name: 'Verificado in situ', value: co2Ver, fill: B2B.forest },
-    { name: 'Estimado', value: co2Est, fill: B2B.tealSoft },
-    {
-      name: `Pendiente meta ${META_CO2_TON} t`,
-      value: pendienteCo2,
-      fill: B2B.grayGrid,
-    },
-  ]
+  // Usar donut del motor (ya filtra ceros / NaN)
+  const donut = carbono.donut.length
+    ? carbono.donut
+    : [
+        { name: 'Verificado in situ', value: co2Ver, fill: B2B.forest },
+        { name: 'Estimado', value: co2Est, fill: B2B.tealSoft },
+        {
+          name: `Pendiente meta ${META_CO2_TON} t`,
+          value: pendienteCo2,
+          fill: B2B.grayGrid,
+        },
+      ].filter((d) => Number(d.value) > 0.001)
 
   const ingresos = [
     { fuente: `Temporada $${PRECIO_BOTELLA_USD}/L`, usd: Math.round(cosecha.usd), fill: B2B.forest },
@@ -206,22 +209,34 @@ export default function DashboardCorporativo({ stats, residuos = [], campoData =
           <p className="corp-formula">{carbono.formula}</p>
           <div className="corp-chart">
             <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={donut}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={58}
-                  outerRadius={86}
-                  paddingAngle={2}
-                >
-                  {donut.map((e) => (
-                    <Cell key={e.name} fill={e.fill} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={CHART_TOOLTIP} formatter={(v) => [`${Number(v).toFixed(1)} t`, '']} />
-                <Legend />
-              </PieChart>
+              {donut.length === 0 ? (
+                <div className="corp-chart-empty">Sin datos de carbono para graficar</div>
+              ) : (
+                <PieChart>
+                  <Pie
+                    data={donut}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={52}
+                    outerRadius={82}
+                    paddingAngle={donut.length > 1 ? 2 : 0}
+                    minAngle={8}
+                    stroke="#fff"
+                    strokeWidth={2}
+                  >
+                    {donut.map((e) => (
+                      <Cell key={e.name} fill={e.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={CHART_TOOLTIP}
+                    formatter={(v, name) => [`${Number(v).toFixed(1)} t CO₂e`, name]}
+                  />
+                  <Legend />
+                </PieChart>
+              )}
             </ResponsiveContainer>
           </div>
           <div className="corp-meter">

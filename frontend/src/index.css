@@ -1877,7 +1877,7 @@ body.agro-page {
   .b2b-topbar { padding-left: 16px; padding-right: 16px; }
 }
 
-/* ?? Modelos matemáticos B2B ?? */
+/* ?? Modelos matem?ticos B2B ?? */
 .b2b-modelos {
   display: flex;
   flex-direction: column;
@@ -4138,6 +4138,14 @@ body.light-page .login-shell .btn-primary {
 .corp-chart {
   width: 100%;
   min-height: 200px;
+}
+.corp-chart-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 180px;
+  color: #64748b;
+  font-size: 0.88rem;
 }
 .corp-meter {
   margin-top: 8px;

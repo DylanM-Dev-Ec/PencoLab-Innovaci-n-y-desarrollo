@@ -470,6 +470,11 @@ function ModeloCarbono({ campoData }) {
           Sin mediciones en el snapshot: se usa proxy por ha ({num(r.ha, 1)} ha × ~5 t/ha). Cuando el productor
           registre mediciones, el modelo usará datos reales.
         </p>
+      ) : r.extrapoladoDesdeMuestras ? (
+        <p className="b2b-modelos-tip">
+          {r.medicionesCount} mediciones a escala de planta (kg) proyectadas a portafolio de {num(r.ha, 1)} ha,
+          manteniendo el ratio verificado / estimado de las muestras.
+        </p>
       ) : (
         <p className="b2b-modelos-tip">
           {r.medicionesCount} mediciones agregadas desde el campo del productor.
@@ -502,22 +507,34 @@ function ModeloCarbono({ campoData }) {
         <div className="b2b-modelos-chart">
           <h4>Distribución</h4>
           <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={r.donut}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={58}
-                outerRadius={86}
-                paddingAngle={2}
-              >
-                {r.donut.map((e) => (
-                  <Cell key={e.name} fill={e.fill} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={CHART_TOOLTIP} formatter={(v) => [`${Number(v).toFixed(1)} t`, '']} />
-              <Legend />
-            </PieChart>
+            {r.donut.length === 0 ? (
+              <div className="b2b-modelos-tip">Sin datos de carbono para graficar.</div>
+            ) : (
+              <PieChart>
+                <Pie
+                  data={r.donut}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={52}
+                  outerRadius={82}
+                  paddingAngle={r.donut.length > 1 ? 2 : 0}
+                  minAngle={8}
+                  stroke="#fff"
+                  strokeWidth={2}
+                >
+                  {r.donut.map((e) => (
+                    <Cell key={e.name} fill={e.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={CHART_TOOLTIP}
+                  formatter={(v, name) => [`${Number(v).toFixed(1)} t CO₂e`, name]}
+                />
+                <Legend />
+              </PieChart>
+            )}
           </ResponsiveContainer>
         </div>
 

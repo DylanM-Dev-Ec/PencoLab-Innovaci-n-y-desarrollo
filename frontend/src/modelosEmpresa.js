@@ -269,6 +269,8 @@ export function calcularEscalamientoHa({
 
 /**
  * Agrega carbono estimado vs verificado del snapshot de campo.
+ * Las mediciones suelen ser a escala de planta (kg); el pastel de portafolio
+ * se expresa en t CO₂e hacia la meta comunitaria.
  * @param {{ mediciones?: object[], parcelas?: object[], plantas?: object[] }} campo
  */
 export function agregarCarbonoPortafolio(campo = {}, { metaCo2Ton = META_CO2_TON } = {}) {
@@ -276,24 +278,51 @@ export function agregarCarbonoPortafolio(campo = {}, { metaCo2Ton = META_CO2_TON
   const parcelas = Array.isArray(campo.parcelas) ? campo.parcelas : []
   const plantas = Array.isArray(campo.plantas) ? campo.plantas : []
 
+  function co2KgFromMedicion(m) {
+    const direct = parseFloat(m?.co2_equivalente_kg)
+    if (Number.isFinite(direct) && direct > 0) return direct
+    const carbono = parseFloat(m?.carbono_acumulado_kg)
+    if (Number.isFinite(carbono) && carbono > 0) return carbono * 3.67
+    return 0
+  }
+
+  function isVerificado(m) {
+    return (
+      m?.carbono_verificado === true ||
+      m?.tipo_carbono === 'verificado_in_situ' ||
+      m?.tipo_carbono === 'verificado'
+    )
+  }
+
   let estimadoKg = 0
   let verificadoKg = 0
 
   for (const m of mediciones) {
-    const co2 = parseFloat(m.co2_equivalente_kg || m.carbono_acumulado_kg * 3.67 || 0) || 0
-    const verificado =
-      m.carbono_verificado === true ||
-      m.tipo_carbono === 'verificado_in_situ' ||
-      m.tipo_carbono === 'verificado'
-    if (verificado) verificadoKg += co2
+    const co2 = co2KgFromMedicion(m)
+    if (isVerificado(m)) verificadoKg += co2
     else estimadoKg += co2
   }
 
   const haSnap = parcelas.reduce((s, p) => s + (Number(p.area_hectareas) || 0), 0)
   const ha = haSnap > 0 ? haSnap : HA_ACTUALES
-  if (mediciones.length === 0) {
-    estimadoKg = ha * CO2_TON_POR_HA * 1000 * 0.55
-    verificadoKg = ha * CO2_TON_POR_HA * 1000 * 0.35
+  const expectedPortfolioKg = ha * CO2_TON_POR_HA * 1000
+  const sampleKg = estimadoKg + verificadoKg
+
+  let proxySinMediciones = mediciones.length === 0
+  let extrapoladoDesdeMuestras = false
+
+  if (mediciones.length === 0 || sampleKg <= 0) {
+    estimadoKg = expectedPortfolioKg * 0.55
+    verificadoKg = expectedPortfolioKg * 0.35
+    proxySinMediciones = true
+  } else if (sampleKg < expectedPortfolioKg * 0.2) {
+    // Muestras a nivel planta (kg): proyectar a portafolio manteniendo ratio verificado/estimado
+    const ratioV = verificadoKg / sampleKg
+    const ratioE = estimadoKg / sampleKg
+    const capturadoKg = expectedPortfolioKg * 0.9
+    verificadoKg = capturadoKg * ratioV
+    estimadoKg = capturadoKg * ratioE
+    extrapoladoDesdeMuestras = true
   }
 
   const estimadoTon = round2(estimadoKg / 1000)
@@ -320,12 +349,8 @@ export function agregarCarbonoPortafolio(campo = {}, { metaCo2Ton = META_CO2_TON
       })
     }
     const row = porParcelaMap.get(key)
-    const co2 = (parseFloat(m.co2_equivalente_kg) || 0) / 1000
-    const verificado =
-      m.carbono_verificado === true ||
-      m.tipo_carbono === 'verificado_in_situ' ||
-      m.tipo_carbono === 'verificado'
-    if (verificado) row.verificadoTon += co2
+    const co2 = co2KgFromMedicion(m) / 1000
+    if (isVerificado(m)) row.verificadoTon += co2
     else row.estimadoTon += co2
   }
 
@@ -336,22 +361,41 @@ export function agregarCarbonoPortafolio(campo = {}, { metaCo2Ton = META_CO2_TON
     totalTon: round2(r.estimadoTon + r.verificadoTon),
   }))
 
-  if (porParcela.length === 0 && parcelas.length > 0) {
-    const share = totalTon / parcelas.length
-    porParcela = parcelas.map((p) => ({
-      id: p.id,
-      nombre: p.nombre || 'Parcela',
-      estimadoTon: round2(share * 0.55),
-      verificadoTon: round2(share * 0.45),
-      totalTon: round2(share),
-    }))
+  // Si extrapolamos a portafolio, repartir t finales por parcela (ponderado por muestra o por ha)
+  if (extrapoladoDesdeMuestras || proxySinMediciones) {
+    if (porParcela.length > 0 && sampleKg > 0 && extrapoladoDesdeMuestras) {
+      const sampleTon = sampleKg / 1000
+      const scale = sampleTon > 0 ? totalTon / sampleTon : 1
+      porParcela = porParcela.map((r) => ({
+        ...r,
+        estimadoTon: round2(r.estimadoTon * scale),
+        verificadoTon: round2(r.verificadoTon * scale),
+        totalTon: round2((r.estimadoTon + r.verificadoTon) * scale),
+      }))
+    } else if (parcelas.length > 0) {
+      const haTotal = haSnap > 0 ? haSnap : parcelas.length
+      porParcela = parcelas.map((p) => {
+        const shareHa = (Number(p.area_hectareas) || haTotal / parcelas.length) / haTotal
+        return {
+          id: p.id,
+          nombre: p.nombre || 'Parcela',
+          estimadoTon: round2(estimadoTon * shareHa),
+          verificadoTon: round2(verificadoTon * shareHa),
+          totalTon: round2(totalTon * shareHa),
+        }
+      })
+    }
   }
 
-  const donut = [
+  const rawDonut = [
     { name: 'Verificado in situ', value: verificadoTon, fill: '#0d4f36' },
     { name: 'Estimado', value: estimadoTon, fill: '#5aa887' },
-    { name: 'Pendiente meta', value: pendienteTon, fill: '#e8eee9' },
+    { name: 'Pendiente meta', value: pendienteTon, fill: '#dbe4de' },
   ]
+  // Recharts se rompe / se ve vacío con ceros o NaN
+  const donut = rawDonut
+    .map((d) => ({ ...d, value: Number.isFinite(d.value) ? Math.max(0, d.value) : 0 }))
+    .filter((d) => d.value > 0.001)
 
   return {
     ha,
@@ -364,8 +408,13 @@ export function agregarCarbonoPortafolio(campo = {}, { metaCo2Ton = META_CO2_TON
     metaCo2Ton,
     porParcela,
     donut,
-    formula: `Σ CO₂ mediciones (estimado + verificado) → avance / ${metaCo2Ton} t meta`,
-    proxySinMediciones: mediciones.length === 0,
+    formula: extrapoladoDesdeMuestras
+      ? `${mediciones.length} muestras → proyectado a ${ha} ha (ratio verif./estim.) / meta ${metaCo2Ton} t`
+      : proxySinMediciones
+        ? `Proxy ${ha} ha × ${CO2_TON_POR_HA} t/ha → avance / ${metaCo2Ton} t meta`
+        : `Σ CO₂ mediciones (estimado + verificado) → avance / ${metaCo2Ton} t meta`,
+    proxySinMediciones,
+    extrapoladoDesdeMuestras,
   }
 }
 
