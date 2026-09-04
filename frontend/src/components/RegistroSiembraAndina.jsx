@@ -88,6 +88,17 @@ export default function RegistroSiembraAndina({ setMsg }) {
         <p>
           Consejos prácticos para laderas y terrazas. Salta al tema que necesites; nada se bloquea.
         </p>
+        <button
+          type="button"
+          className="m-btn practica-cta"
+          onClick={() => navigate('/productor/practica')}
+        >
+          <AppIcon name="plantar" alt="" className="glyph-xs" />
+          Abrir guía interactiva
+        </button>
+        <p className="guia-cta-note">
+          Practica elegir hijuelo, curar el corte, trazar surcos y apisonar — con verdicto en vivo.
+        </p>
         <div className="guia-progress" aria-label="Temas revisados">
           {CHAPTERS.map((c, i) => (
             <button
@@ -362,9 +373,15 @@ export default function RegistroSiembraAndina({ setMsg }) {
               <li>Eso alimenta el carbono estimado vs verificado in situ.</li>
             </ul>
             <div className="guia-callout soft">
+              ¿Quieres practicar en vivo? Abre la guía interactiva (elige, cura, traza y apisona).
+            </div>
+            <button type="button" className="m-btn" onClick={() => navigate('/productor/practica')}>
+              Ir a la guía interactiva
+            </button>
+            <div className="guia-callout soft">
               ¿Listo para registrar el lote? Usa la pestaña <strong>Lote</strong> del menú inferior.
             </div>
-            <button type="button" className="m-btn" onClick={() => navigate('/productor/anotar')}>
+            <button type="button" className="m-btn ghost" onClick={() => navigate('/productor/anotar')}>
               Ir a registrar lote
             </button>
           </div>

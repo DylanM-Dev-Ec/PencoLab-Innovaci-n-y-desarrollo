@@ -63,7 +63,7 @@ export default function RootHub({
 
   async function enter(portal) {
     if (loggedIn && rol === portal) {
-      navigate(portal === 'empresa' ? '/empresa' : '/productor')
+      navigate(portal === 'empresa' ? '/empresa' : '/productor/suelos')
       return
     }
     setBusy(portal)

@@ -10,7 +10,7 @@ import ProductorApp from './screens/ProductorApp'
 import EmpresaApp from './screens/EmpresaApp'
 
 function homeFor(rol) {
-  return rol === 'empresa' ? '/empresa' : '/productor'
+  return rol === 'empresa' ? '/empresa' : '/productor/suelos'
 }
 
 function preferredPortalFromQuery() {
@@ -35,7 +35,7 @@ function enforceRoute(rol, token) {
   }
 
   if (rol === 'productor' && path.startsWith('/empresa')) {
-    navigate('/productor')
+    navigate('/productor/suelos')
     return
   }
   if (rol === 'empresa' && path.startsWith('/productor')) {
