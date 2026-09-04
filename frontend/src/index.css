@@ -4119,6 +4119,32 @@ body.light-page .login-shell .btn-primary {
   gap: 14px;
   padding-bottom: 24px;
 }
+.anotar-qr-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid #d7eadf;
+  background: #fff;
+  padding: 14px 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+  font: inherit;
+}
+.anotar-qr-link strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #0d4f36;
+}
+.anotar-qr-link span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.35;
+}
 .anotar-hero {
   padding: 12px 4px 4px;
 }
