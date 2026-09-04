@@ -143,7 +143,7 @@ export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online,
   const plantReady = apto && cureDone && apisonOk
   const progressPct = Math.min(100, ((apto ? 1 : 0) + (cureDone ? 1 : 0) + (apisonOk ? 1 : 0)) * 34)
 
-  const verdicto = useMemo(() => {
+  const veredicto = useMemo(() => {
     if (form.firmeza === 'bofo') {
       return {
         nivel: 'bad',
