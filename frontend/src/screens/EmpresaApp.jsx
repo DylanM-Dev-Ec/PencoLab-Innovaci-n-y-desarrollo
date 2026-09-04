@@ -21,6 +21,7 @@ import {
 import EficienciaMexico from '../components/EficienciaMexico'
 import DashboardCorporativo from '../components/DashboardCorporativo'
 import ModelosEmpresaHub from '../components/ModelosEmpresaHub'
+import CobrosPagosHub from '../components/CobrosPagosHub'
 import { EMPRESA_DEMO, guiaFitoDe } from '../empresaDemo'
 import { B2B, CHART_GRID, CHART_TOOLTIP } from '../empresaTheme'
 import { currentPath, navigate } from '../routing'
@@ -61,6 +62,12 @@ const NAV = [
     label: 'Modelos',
     desc: 'Calculadoras: cosecha, supervivencia, escala y carbono',
     icon: IconFormula,
+  },
+  {
+    path: '/empresa/cobros',
+    label: 'Cobros',
+    desc: 'Pagos, deudas del Pacto Social y acopio',
+    icon: IconMoney,
   },
   {
     path: '/empresa/mapa',
@@ -339,6 +346,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
             </>
           )}
           {path === '/empresa/modelos' && <ModelosEmpresaHub campoData={campoData} />}
+          {path === '/empresa/cobros' && <CobrosPagosHub campoData={campoData} />}
           {path === '/empresa/mapa' && <MapaCalor parcelas={parcelas} />}
           {path === '/empresa/crecimiento' && (
             <HistorialCrecimiento token={token} crecimiento={crecimiento} demo={demo} />
@@ -906,6 +914,15 @@ function IconFormula() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
       <path d="M5 5h6M5 12h14M5 19h10" />
       <path d="M16 5l3 3-3 3" />
+    </svg>
+  )
+}
+function IconMoney() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 12h0.01M18 12h0.01" />
     </svg>
   )
 }
