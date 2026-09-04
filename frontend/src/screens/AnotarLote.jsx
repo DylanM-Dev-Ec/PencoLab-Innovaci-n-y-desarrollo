@@ -135,6 +135,14 @@ export default function AnotarLote({ data, onAdd, setMsg }) {
         <p>Deja el lote en el teléfono con GPS, trazado y origen. Sincroniza cuando tengas red.</p>
       </header>
 
+      <button type="button" className="m-card anotar-qr-link" onClick={() => navigate('/productor/qr')}>
+        <AppIcon name="qr" alt="" className="glyph-md" />
+        <div>
+          <strong>Código QR del lote</strong>
+          <span>Genera o escanea el QR para identificar parcelas en campo</span>
+        </div>
+      </button>
+
       <form className="m-card anotar-form" onSubmit={save}>
         <input
           className="m-name"

@@ -39,6 +39,12 @@ const NAV = [
     desc: 'Registra un lote nuevo: plantas, surcos y ubicación',
   },
   {
+    path: '/productor/qr',
+    icon: 'qr',
+    label: 'QR',
+    desc: 'Genera o escanea el código QR de tu lote',
+  },
+  {
     path: '/productor/andina',
     icon: 'guia',
     label: 'Guía',
