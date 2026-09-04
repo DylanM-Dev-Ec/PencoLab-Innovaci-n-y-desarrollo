@@ -115,7 +115,7 @@ export default function RootHub({
           <div className="welcome-cta-row">
             <button type="button" className="welcome-cta primary" onClick={() => setPaso('entrar')}>
               <AppIcon name="plantar" alt="" className="glyph-xs" />
-              Mi loco pa dentro
+              Bienvenidos
             </button>
             <button type="button" className="welcome-cta ghost" onClick={() => setPaso('quehace')}>
               ¿Qué puedo hacer?
@@ -183,7 +183,7 @@ export default function RootHub({
           </ul>
 
           <button type="button" className="welcome-cta primary wide" onClick={() => setPaso('entrar')}>
-            Mi loco pa dentro
+            Bienvenidos
           </button>
         </section>
       )}
