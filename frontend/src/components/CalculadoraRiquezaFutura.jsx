@@ -16,7 +16,7 @@ const INTERCALADOS = [
     label: 'Papas del Carchi',
     usd_ha_6m: 1200,
     icon: 'papa',
-    hint: 'Ingreso rápido en calles de 3 m · primera cosecha ~6 meses',
+    hint: 'Ingreso temprano en calles de 3 m · primera cosecha ~6 meses',
   },
   {
     id: 'quinoa',
@@ -31,6 +31,28 @@ const INTERCALADOS = [
     usd_ha_6m: 800,
     icon: 'chocho',
     hint: 'Fija nitrógeno y mejora el suelo mientras madura el penco',
+  },
+]
+
+/** Escenarios de pérdida (plantas que no llegan a madurez). */
+const MORTALIDAD = [
+  {
+    id: 'tradicional',
+    label: 'Sin protocolo',
+    pct: 30,
+    tip: 'Sin desinfección ni cicatrización: muchas piñas se pudren o se secan.',
+  },
+  {
+    id: 'cuidado',
+    label: 'Con guía básica',
+    pct: 12,
+    tip: 'Corte limpio, sol 10 días y riego parco: bajas bastante la pérdida.',
+  },
+  {
+    id: 'certificado',
+    label: 'Método certificado',
+    pct: 4,
+    tip: 'Fuego + pasta + cicatriz + trazado 3 m: la meta del protocolo (~4%).',
   },
 ]
 
@@ -84,32 +106,86 @@ export async function flushPlanesAccion(token, planesFromStore = []) {
 }
 
 /**
- * Calculadora de riqueza futura — plan de acción personalizado del agricultor.
- * React móvil (portal productor); equivalente funcional a RN.
+ * Calculadora de plan de acción — guía para maximizar ingreso con pérdidas.
  */
 export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }) {
   const [ha, setHa] = useState(3)
-  const [densidadId, setDensidadId] = useState('actual') // actual | alta
+  const [densidadId, setDensidadId] = useState('alta')
   const [intercaladoId, setIntercaladoId] = useState('papa')
+  const [mortalidadPct, setMortalidadPct] = useState(12)
   const [pulse, setPulse] = useState(0)
   const [saving, setSaving] = useState(false)
 
   const intercalado = INTERCALADOS.find((i) => i.id === intercaladoId) || INTERCALADOS[0]
+  const mortPreset = MORTALIDAD.find((m) => m.pct === mortalidadPct)
+  const mortTip =
+    mortPreset?.tip ||
+    (mortalidadPct <= 5
+      ? 'Mortalidad baja: mantén el protocolo de corte, sol y riego parco.'
+      : mortalidadPct <= 15
+        ? 'Mortalidad media: revisa cicatrización y desinfección para bajarla.'
+        : 'Mortalidad alta: sin protocolo pierdes muchas plantas y mucho ingreso.')
   const plantasPorHa = densidadId === 'alta' ? DENSIDAD_ALTA_HA : DENSIDAD_ACTUAL_HA
 
   const calc = useMemo(() => {
-    const plantas = Math.round(ha * plantasPorHa)
-    const ingresoPenco = plantas * USD_POR_PLANTA_MADUREZ
+    const sembradas = Math.round(ha * plantasPorHa)
+    const vivos = Math.round(sembradas * (1 - mortalidadPct / 100))
+    const muertas = Math.max(0, sembradas - vivos)
+    const ingresoIdeal = sembradas * USD_POR_PLANTA_MADUREZ
+    const ingresoPenco = vivos * USD_POR_PLANTA_MADUREZ
+    const perdidaUsd = muertas * USD_POR_PLANTA_MADUREZ
     const ingresoCorto = Math.round(ha * intercalado.usd_ha_6m)
-    const co2Ton = ha * CO2_TON_POR_HA
+    const total = ingresoPenco + ingresoCorto
+    const co2Ton = Number(((vivos / Math.max(plantasPorHa, 1)) * CO2_TON_POR_HA).toFixed(1))
     const pctCo2 = Math.min(100, (co2Ton / META_CO2_TON) * 100)
     const pctHa = Math.min(100, (ha / HA_META) * 100)
-    return { plantas, ingresoPenco, ingresoCorto, co2Ton, pctCo2, pctHa, totalCortoLargo: ingresoPenco + ingresoCorto }
-  }, [ha, plantasPorHa, intercalado])
+
+    const vivosCert = Math.round(sembradas * (1 - 4 / 100))
+    const ingresoCert = vivosCert * USD_POR_PLANTA_MADUREZ + ingresoCorto
+    const gananciaVsActual = ingresoCert - total
+
+    const tips = []
+    if (densidadId !== 'alta') {
+      tips.push({
+        id: 'densidad',
+        text: `Pasa a alta densidad (${DENSIDAD_ALTA_HA.toLocaleString()}/ha): más plantas vivas por hectárea sin ahogar el lote.`,
+      })
+    }
+    if (mortalidadPct > 4) {
+      tips.push({
+        id: 'mort',
+        text: `Baja la mortalidad hacia ~4% (fuego, pasta, 10 días al sol): recuperas unos $${perdidaUsd.toLocaleString()} que hoy se pierden.`,
+      })
+    }
+    tips.push({
+      id: 'inter',
+      text: `Mantén ${intercalado.label} en las calles el primer año: ~$${ingresoCorto.toLocaleString()} mientras el penco crece.`,
+    })
+    tips.push({
+      id: 'riego',
+      text: 'Riego parco y poda solo de hojas secas: menos pudrición y menos puente para plagas.',
+    })
+
+    return {
+      sembradas,
+      vivos,
+      muertas,
+      ingresoIdeal,
+      ingresoPenco,
+      perdidaUsd,
+      ingresoCorto,
+      total,
+      co2Ton,
+      pctCo2,
+      pctHa,
+      gananciaVsActual,
+      tips,
+    }
+  }, [ha, plantasPorHa, intercalado, mortalidadPct, densidadId])
 
   useEffect(() => {
     setPulse((p) => p + 1)
-  }, [ha, densidadId, intercaladoId])
+  }, [ha, densidadId, intercaladoId, mortalidadPct])
 
   async function generarPlan() {
     setSaving(true)
@@ -124,8 +200,12 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
       longitud_inicial: null,
       fecha_inicio_plan: hoy,
       densidad_plantas_ha: plantasPorHa,
-      plantas_totales: calc.plantas,
+      plantas_totales: calc.sembradas,
+      plantas_vivas_estimadas: calc.vivos,
+      mortalidad_pct: mortalidadPct,
+      plantas_perdidas_estimadas: calc.muertas,
       ingreso_penco_usd: calc.ingresoPenco,
+      ingreso_perdida_mortalidad_usd: calc.perdidaUsd,
       ingreso_intercalado_6m_usd: calc.ingresoCorto,
       co2_mitigado_ton: calc.co2Ton,
       created_at: new Date().toISOString(),
@@ -155,17 +235,17 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
         onAdd?.({
           planes_accion: [...previos, enriched],
         })
-        setMsg?.({ type: 'success', text: 'Plan certificado guardado y enviado.' })
+        setMsg?.({ type: 'success', text: 'Plan de siembra guardado y enviado.' })
       } else {
         setMsg?.({
           type: 'success',
-          text: 'Plan guardado offline. Se sincronizará al recuperar internet.',
+          text: 'Plan guardado sin red. Se sincronizará al recuperar conexión.',
         })
       }
     } catch {
       setMsg?.({
         type: 'warn',
-        text: 'Plan guardado offline. Se enviará al recuperar internet.',
+        text: 'Plan guardado sin red. Se enviará al recuperar conexión.',
       })
     } finally {
       setSaving(false)
@@ -176,10 +256,31 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
     <div className="riqueza-screen">
       <header className="riqueza-hero">
         <AppIcon name="plata" alt="" className="glyph-lg" />
-        <p className="riqueza-kicker">Plan de acción · riqueza futura</p>
-        <h2>Diseña tu lote</h2>
-        <p>De 1 a {HA_META} ha · penco + calles intercaladas · carbono hacia {META_CO2_TON} t</p>
+        <p className="riqueza-kicker">Plan de acción · maximizar ingreso</p>
+        <h2>¿Cómo gano más con mi lote?</h2>
+        <p>
+          Ajusta hectáreas, densidad, intercalado y pérdida de plantas. El ingreso del penco solo
+          cuenta las que llegan vivas a madurez.
+        </p>
       </header>
+
+      <section className="m-card riqueza-pasos">
+        <h3>Pasos para maximizar</h3>
+        <ol>
+          <li>
+            <strong>Densidad alta</strong> (1.5 m × 3 m) → más plantas por hectárea.
+          </li>
+          <li>
+            <strong>Baja mortalidad</strong> con protocolo (fuego, pasta, 10 días al sol).
+          </li>
+          <li>
+            <strong>Intercalado</strong> en calles el primer año → ingreso temprano.
+          </li>
+          <li>
+            <strong>Riego parco y poda sanitaria</strong> → menos pudrición y plagas.
+          </li>
+        </ol>
+      </section>
 
       <section className="m-card riqueza-inputs">
         <div className="m-hero-num">
@@ -198,15 +299,9 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
             <span>1 ha</span>
             <span>Meta {HA_META} ha</span>
           </div>
-          <div className="riqueza-meter">
-            <div className="riqueza-meter-bar">
-              <i style={{ width: `${calc.pctHa}%` }} />
-            </div>
-            <small>{calc.pctHa.toFixed(0)}% del objetivo comunitario</small>
-          </div>
         </div>
 
-        <p className="riqueza-label">Densidad de plantación</p>
+        <p className="riqueza-label">1. Densidad de plantación</p>
         <div className="m-chip-row">
           <button
             type="button"
@@ -220,16 +315,53 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
             className={`m-chip ${densidadId === 'alta' ? 'on' : ''}`}
             onClick={() => setDensidadId('alta')}
           >
-            Alta densidad · {DENSIDAD_ALTA_HA.toLocaleString()}/ha
+            Alta · {DENSIDAD_ALTA_HA.toLocaleString()}/ha
           </button>
         </div>
         <p className="riqueza-hint">
           {densidadId === 'actual'
-            ? 'Referencia del lote actual: 3 000 plantas en 3 ha (1 000/ha).'
-            : 'Trazado 1.5 m × 3 m ≈ 2 222 plantas/ha (método de alta densidad).'}
+            ? 'Referencia baja (1 000/ha). Para maximizar, conviene alta densidad.'
+            : 'Trazado 1.5 m × 3 m ≈ 2 222/ha: más ingreso por hectárea si cuidas la supervivencia.'}
         </p>
 
-        <p className="riqueza-label">Cultivo intercalado (calles de 3 m)</p>
+        <p className="riqueza-label">2. Pérdida por plantas muertas</p>
+        <div className="riqueza-mort-row">
+          {MORTALIDAD.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className={`riqueza-mort ${mortalidadPct === m.pct ? 'on' : ''}`}
+              onClick={() => setMortalidadPct(m.pct)}
+            >
+              <strong>{m.label}</strong>
+              <span>{m.pct}% mortalidad</span>
+            </button>
+          ))}
+        </div>
+        <p className="riqueza-hint">{mortTip}</p>
+
+        <div className="m-hero-num riqueza-mort-slider">
+          <span>Ajuste fino · mortalidad {mortalidadPct}%</span>
+          <input
+            type="range"
+            min={0}
+            max={40}
+            step={1}
+            value={mortalidadPct}
+            onChange={(e) => setMortalidadPct(parseInt(e.target.value, 10))}
+            aria-label="Porcentaje de mortalidad"
+          />
+          <div className="riqueza-ha-scale">
+            <span>0% (ideal)</span>
+            <span>40% (malo)</span>
+          </div>
+        </div>
+        <p className="riqueza-hint soft">
+          El ingreso del penco se calcula solo con plantas vivas. Las muertas restan ~$
+          {USD_POR_PLANTA_MADUREZ} c/u.
+        </p>
+
+        <p className="riqueza-label">3. Cultivo intercalado (calles de 3 m)</p>
         <div className="riqueza-crops">
           {INTERCALADOS.map((c) => (
             <button
@@ -249,29 +381,41 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
 
       <div className="riqueza-results" key={pulse}>
         <article className="riqueza-card anim">
-          <span className="riqueza-card-label">Densidad · plantas</span>
-          <strong>{calc.plantas.toLocaleString()}</strong>
+          <span className="riqueza-card-label">Sembradas</span>
+          <strong>{calc.sembradas.toLocaleString()}</strong>
           <small>
             {ha} ha × {plantasPorHa.toLocaleString()}/ha
           </small>
         </article>
 
-        <article className="riqueza-card anim delay-1 highlight">
-          <span className="riqueza-card-label">Ingreso futuro · penco</span>
+        <article className="riqueza-card anim delay-1 good">
+          <span className="riqueza-card-label">Vivas a madurez</span>
+          <strong>{calc.vivos.toLocaleString()}</strong>
+          <small>Tras {mortalidadPct}% de pérdida</small>
+        </article>
+
+        <article className="riqueza-card anim delay-1 warn">
+          <span className="riqueza-card-label">Muertas / pérdida</span>
+          <strong>{calc.muertas.toLocaleString()}</strong>
+          <small>≈ −${calc.perdidaUsd.toLocaleString()} USD</small>
+        </article>
+
+        <article className="riqueza-card anim delay-2 highlight">
+          <span className="riqueza-card-label">Ingreso penco (solo vivas)</span>
           <strong>${calc.ingresoPenco.toLocaleString()}</strong>
           <small>
-            {calc.plantas.toLocaleString()} × ${USD_POR_PLANTA_MADUREZ} chawarmishky maduro
+            {calc.vivos.toLocaleString()} × ${USD_POR_PLANTA_MADUREZ}
           </small>
         </article>
 
         <article className="riqueza-card anim delay-2">
           <span className="riqueza-card-label">Corto plazo · {intercalado.label}</span>
           <strong>${calc.ingresoCorto.toLocaleString()}</strong>
-          <small>Estimado primeros 6 meses en calles</small>
+          <small>Estimado primeros 6 meses</small>
         </article>
 
         <article className="riqueza-card anim delay-3 clima">
-          <span className="riqueza-card-label">Lucha climática · CO₂</span>
+          <span className="riqueza-card-label">CO₂ (plantas vivas)</span>
           <strong>
             {calc.co2Ton.toFixed(1)} <em>t</em>
           </strong>
@@ -281,22 +425,41 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
             </div>
           </div>
           <small>
-            {ha} × {CO2_TON_POR_HA} t/ha · meta comunitaria {META_CO2_TON} t ({calc.pctCo2.toFixed(0)}%)
+            Meta comunitaria {META_CO2_TON} t ({calc.pctCo2.toFixed(0)}%)
           </small>
         </article>
       </div>
 
       <div className="riqueza-total anim delay-4">
-        <span>Proyección combinada</span>
-        <strong>${calc.totalCortoLargo.toLocaleString()} USD</strong>
-        <small>Corto plazo + madurez del penco (estimado)</small>
+        <span>Ingreso estimado (vivas + intercalado)</span>
+        <strong>${calc.total.toLocaleString()} USD</strong>
+        <small>
+          Sin contar ${calc.perdidaUsd.toLocaleString()} perdidos por mortalidad. Ideal sin pérdidas: $
+          {(calc.ingresoIdeal + calc.ingresoCorto).toLocaleString()}.
+        </small>
       </div>
 
+      {calc.gananciaVsActual > 0 && mortalidadPct > 4 && (
+        <div className="riqueza-upside">
+          Si bajas la mortalidad a 4% (método certificado), podrías sumar unos{' '}
+          <strong>${calc.gananciaVsActual.toLocaleString()}</strong> al plan actual.
+        </div>
+      )}
+
+      <section className="m-card riqueza-tips">
+        <h3>Qué hacer ahora</h3>
+        <ul>
+          {calc.tips.map((t) => (
+            <li key={t.id}>{t.text}</li>
+          ))}
+        </ul>
+      </section>
+
       <button type="button" className="m-btn riqueza-cta" disabled={saving} onClick={generarPlan}>
-        {saving ? 'Guardando plan…' : 'Generar mi Plan de Acción de Siembra Certificado'}
+        {saving ? 'Guardando plan…' : 'Guardar mi plan de siembra'}
       </button>
       <p className="riqueza-offline-hint">
-        Se guarda en el teléfono ya. Al recuperar internet se envía al backend.
+        Se guarda en el dispositivo. Al recuperar conexión se envía al servidor.
       </p>
 
       {(data?.planes_accion || []).length > 0 && (
@@ -306,16 +469,14 @@ export default function CalculadoraRiquezaFutura({ data, onAdd, online, setMsg }
             <div key={p.id} className="riqueza-hist-item">
               <strong>
                 {p.hectareas_planificadas ?? p.hectareas} ha ·{' '}
-                {(p.proyeccion_financiera?.plantas_totales || p.plantas_totales)?.toLocaleString?.() ||
-                  p.plantas_totales}{' '}
-                plantas
+                {(p.plantas_vivas_estimadas || p.plantas_totales)?.toLocaleString?.() || p.plantas_totales}{' '}
+                vivas
               </strong>
               <span>
                 $
-                {Number(
-                  p.proyeccion_financiera?.ingreso_penco_madurez_usd || p.ingreso_penco_usd || 0
-                ).toLocaleString()}{' '}
-                penco · {p.cultivo_intercalado_label || p.cultivo_intercalado_elegido} ·{' '}
+                {Number(p.ingreso_penco_usd || 0).toLocaleString()} penco
+                {p.mortalidad_pct != null ? ` · ${p.mortalidad_pct}% mort.` : ''} ·{' '}
+                {p.cultivo_intercalado_label || p.cultivo_intercalado_elegido} ·{' '}
                 {p.estado || (p.synced_at ? 'enviado' : 'pendiente sync')}
               </span>
             </div>

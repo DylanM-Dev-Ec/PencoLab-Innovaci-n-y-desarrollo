@@ -3966,6 +3966,105 @@ body.light-page .login-shell .btn-primary {
   opacity: 0.8;
   font-size: 0.82rem;
 }
+.riqueza-pasos {
+  margin-bottom: 12px;
+}
+.riqueza-pasos h3,
+.riqueza-tips h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: #0d4f36;
+}
+.riqueza-pasos ol {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.riqueza-pasos li {
+  margin-bottom: 6px;
+}
+.riqueza-mort-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+@media (min-width: 420px) {
+  .riqueza-mort-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.riqueza-mort {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  border: 1.5px solid #d7eadf;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  font: inherit;
+  color: #334155;
+}
+.riqueza-mort strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+.riqueza-mort span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+.riqueza-mort.on {
+  border-color: #0d4f36;
+  background: #eef6f1;
+  box-shadow: 0 6px 16px rgba(13, 79, 54, 0.1);
+}
+.riqueza-mort.on span {
+  color: #0d4f36;
+}
+.riqueza-mort-slider {
+  margin-top: 8px;
+}
+.riqueza-hint.soft {
+  opacity: 0.9;
+}
+.riqueza-card.good {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+.riqueza-card.warn {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+.riqueza-upside {
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #eef8ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.riqueza-tips {
+  margin: 12px 0;
+}
+.riqueza-tips ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.riqueza-tips li {
+  margin-bottom: 8px;
+}
 .riqueza-cta {
   min-height: 58px;
   line-height: 1.25;
