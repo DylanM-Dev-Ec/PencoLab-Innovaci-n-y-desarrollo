@@ -561,17 +561,38 @@ function FormularioSuelos({ data, scope, onAdd }) {
 
 function PlanSiembraPanel({ plan, tipo }) {
   const r = plan.rendimiento
-  const cols = plan.preview_cols || Math.min(10, plan.plantas_por_surco)
-  const rows = plan.preview_rows || Math.min(6, plan.surcos)
-  const showPapa = tipo?.id === 'intercalado_papa'
-  const baseIcon = tipo?.id === 'vivero_semilla' ? 'penco' : tipo?.icon === 'papa' ? 'penco' : tipo?.icon || 'penco'
+  const ha = plan.hectareas || 0
+  const haRef = 20
+  const plantasRef = Math.max(1, haRef * (plan.pencos_por_ha || 2222) * 0.9)
+  const surcosRef = Math.max(1, Math.floor(Math.sqrt(haRef * 10000) / (tipo?.entre_surcos_m || 3)))
+
+  const areaPct = Math.min(100, (ha / haRef) * 100)
+  const plantasPct = Math.min(100, (plan.pencos_totales / plantasRef) * 100)
+  const surcosPct = Math.min(100, (plan.surcos / surcosRef) * 100)
+
+  // Puntos del diagrama: crecen con el total real (no un tope fijo engañoso)
+  const dots = Math.min(96, Math.max(4, Math.round(plan.pencos_totales / 55)))
+  const cols = Math.max(3, Math.ceil(Math.sqrt(dots * 1.35)))
+  const rows = Math.max(2, Math.ceil(dots / cols))
+  const fieldScale = Math.min(1, Math.max(0.38, Math.sqrt(ha / haRef)))
+
+  const bars = [
+    { id: 'ha', label: 'Área del lote', value: `${ha} ha`, pct: areaPct },
+    {
+      id: 'plantas',
+      label: plan.vivero ? 'Plantines estimados' : 'Plantas estimadas',
+      value: plan.pencos_totales.toLocaleString(),
+      pct: plantasPct,
+    },
+    { id: 'surcos', label: 'Surcos en el lote', value: String(plan.surcos), pct: surcosPct },
+  ]
 
   return (
     <div className="m-plan">
       <div className="m-plan-stats">
         <div>
           <strong>{plan.pencos_totales.toLocaleString()}</strong>
-          <span>{plan.vivero ? 'plantines' : 'pencos'}</span>
+          <span>{plan.vivero ? 'plantines' : 'plantas'}</span>
         </div>
         <div>
           <strong>{plan.cuarteles}</strong>
@@ -586,20 +607,43 @@ function PlanSiembraPanel({ plan, tipo }) {
       </div>
       <p className="m-plan-layout">{plan.division.layout}</p>
       <p className="m-plan-esp">{plan.espaciamiento}</p>
-      <div className="plan-grid plan-field" aria-label="Vista previa de plantación">
-        {Array.from({ length: rows }).map((_, ri) => (
-          <div key={ri} className="plan-row">
-            {Array.from({ length: cols }).map((__, ci) => (
-              <span key={ci} className="plan-plant">
-                <AppIcon name={showPapa && ci % 2 === 1 ? 'papa' : baseIcon} alt="" />
-              </span>
-            ))}
+
+      <div className="plan-chart" aria-label="Comparación según hectáreas">
+        {bars.map((b) => (
+          <div key={b.id} className="plan-chart-row">
+            <div className="plan-chart-meta">
+              <span>{b.label}</span>
+              <strong>{b.value}</strong>
+            </div>
+            <div className="plan-chart-track" aria-hidden>
+              <i style={{ width: `${b.pct}%` }} />
+            </div>
           </div>
         ))}
       </div>
+
+      <div className="plan-field-wrap" aria-hidden>
+        <div className="plan-field-box" style={{ width: `${fieldScale * 100}%` }}>
+          <div
+            className="plan-density"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, 1fr)`,
+              gridTemplateRows: `repeat(${rows}, 1fr)`,
+            }}
+          >
+            {Array.from({ length: dots }).map((_, i) => (
+              <span key={i} className="plan-dot" />
+            ))}
+          </div>
+        </div>
+        <p className="plan-field-scale">
+          Tamaño relativo del lote · {ha} ha (referencia visual {haRef} ha)
+        </p>
+      </div>
+
       <p className="plan-grid-caption">
-        Cada ícono = 1 planta en el marco. Vista esquemática ({rows} surcos × {cols} plantas). Total real:{' '}
-        {plan.pencos_totales.toLocaleString()}.
+        Al cambiar las hectáreas se actualizan plantas, surcos y el tamaño del lote. Total estimado:{' '}
+        {plan.pencos_totales.toLocaleString()} {plan.vivero ? 'plantines' : 'plantas'}.
       </p>
       <p className="m-plan-consejo">{plan.division.consejo}</p>
     </div>
