@@ -125,29 +125,55 @@ export const EMPRESA_DEMO = {
       id: 'a1',
       tipo: 'scouting_visual',
       fecha: '2026-09-01',
-      notas: 'Puntos rojos en pencas inferiores: posible cochinilla.',
+      notas:
+        'En las pencas de abajo se ven puntos rojos y una capa blanca como algodón. Sospecha de cochinilla en parcela Ángel.',
       gps_lat: 0.6225,
       gps_lng: -77.937,
       clasificacion: 'cochinilla',
       productor: 'María Penco',
-      foto:
-        'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzJhM2YyNCIvPjx0ZXh0IHg9IjIwMCIgeT0iMTQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjYWVkNTgxIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCI+U2NvdXRpbmcgaW4gc2l0dTwvdGV4dD48Y2lyY2xlIGN4PSIxMjAiIGN5PSIyMDAiIHI9IjgiIGZpbGw9IiNlZjUzNTAiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIxODAiIHI9IjYiIGZpbGw9IiNlZjUzNTAiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMTAiIHI9IjciIGZpbGw9IiNlZjUzNTAiLz48Y2lyY2xlIGN4PSIyNDAiIGN5PSIxOTAiIHI9IjUiIGZpbGw9IiNlZjUzNTAiLz48dGV4dCB4PSIyMDAiIHk9IjI2MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmYjc0ZCIgZm9udC1zaXplPSIxNCI+Q29jaGluaWxsYSAtIHB1bnRvcyByb2pvczwvdGV4dD48L3N2Zz4=',
-      protocolo_mitigacion:
-        'Recomendación de tratamiento: Limpiar las pencas afectadas con un algodón empapado en alcohol o lavar con agua y jabón de forma inmediata',
-      datos: { clasificacion: 'cochinilla', foto: true },
+      parcela: 'Parcela Ángel · ladera norte',
+      severidad: 'alta',
+      plantas_afectadas: 12,
+      estado: 'activa',
+      foto: null,
+      protocolo_mitigacion: null,
+      datos: { clasificacion: 'cochinilla' },
     },
     {
       id: 'a2',
       tipo: 'fitosanitario',
       fecha: '2026-08-28',
-      notas: 'Pudrición blanda en base (Erwinia). Foto in situ adjunta.',
+      notas:
+        'La base de la planta se siente blanda y huele mal. Posible pudrición por Erwinia. Hay riesgo de que se contagien las vecinas.',
       gps_lat: 0.598,
       gps_lng: -77.91,
       clasificacion: 'pudricion_erwinia',
       productor: 'José Agave',
+      parcela: 'Parcela Loma · zanja 2',
+      severidad: 'critica',
+      plantas_afectadas: 3,
+      estado: 'activa',
       foto: null,
       protocolo_mitigacion: null,
-      datos: { clasificacion: 'pudricion_erwinia', foto: true },
+      datos: { clasificacion: 'pudricion_erwinia' },
+    },
+    {
+      id: 'a3',
+      tipo: 'scouting_visual',
+      fecha: '2026-08-20',
+      notas:
+        'Orificios en el tallo y pencas mordidas. Señales de picudo del agave. Revisar hijuelos recién plantados.',
+      gps_lat: 0.6102,
+      gps_lng: -77.925,
+      clasificacion: 'picudo_agave',
+      productor: 'Rosa Quilo',
+      parcela: 'Vivero · bandeja B',
+      severidad: 'media',
+      plantas_afectadas: 5,
+      estado: 'activa',
+      foto: null,
+      protocolo_mitigacion: null,
+      datos: { clasificacion: 'picudo_agave' },
     },
   ],
   eficiencia: {
@@ -228,4 +254,99 @@ export const EMPRESA_DEMO = {
 };
 
 export const PROTOCOLO_COCHINILLA =
-  'Recomendación de tratamiento: Limpiar las pencas afectadas con un algodón empapado en alcohol o lavar con agua y jabón de forma inmediata';
+  'Limpiar las pencas afectadas con algodón y alcohol, o lavar con agua y jabón. Quitar hojas secas que sirven de puente a la plaga.'
+
+/** Guía clara de alertas fitosanitarias (empresa + scouting). */
+export const FITO_GUIA = {
+  cochinilla: {
+    id: 'cochinilla',
+    nombre: 'Cochinilla',
+    icon: 'cochinilla',
+    color: '#b91c1c',
+    bg: '#fef2f2',
+    que_es: 'Insecto que chupa savia. Deja puntos rojos y una capa blanca como algodón en las pencas.',
+    como_se_ve: [
+      'Puntos rojos en pencas de abajo',
+      'Polvo o algodón blanco pegado a la hoja',
+      'Planta se ve débil si avanza mucho',
+    ],
+    riesgo: 'Puede bajar el vigor y abrir puerta a otras plagas si no se limpia a tiempo.',
+    urgencia: 'Actuar en 24–48 h',
+    pasos: [
+      'Aislar o marcar las plantas afectadas',
+      'Limpiar pencas con alcohol o agua + jabón',
+      'Quitar solo hojas secas (poda sanitaria)',
+      'Volver a revisar en 3–5 días',
+    ],
+  },
+  pudricion_erwinia: {
+    id: 'pudricion_erwinia',
+    nombre: 'Pudrición blanda (Erwinia)',
+    icon: 'erwinia',
+    color: '#9a3412',
+    bg: '#fff7ed',
+    que_es: 'Bacteria que ablanda y pudre la base o el corazón del penco. Se nota por olor y tejido blando.',
+    como_se_ve: [
+      'Base o corazón blando al tacto',
+      'Olor fuerte / desagradable',
+      'Hojas que se caen o se ponen acuosas',
+    ],
+    riesgo: 'Se puede contagiar a plantas vecinas y matar el hijuelo rápido.',
+    urgencia: 'Actuar hoy',
+    pasos: [
+      'No regar en exceso ni encharcar',
+      'Retirar tejido podrido con herramienta limpia',
+      'Desinfectar machete/cuchillo al fuego entre plantas',
+      'Separar o marcar plantas enfermas y avisar al productor',
+    ],
+  },
+  picudo_agave: {
+    id: 'picudo_agave',
+    nombre: 'Picudo del agave',
+    icon: 'picudo',
+    color: '#92400e',
+    bg: '#fffbeb',
+    que_es: 'Escarabajo que perfora el tallo y las pencas. Usa hojas secas como refugio.',
+    como_se_ve: [
+      'Agujeros en tallo o pencas',
+      'Mordeduras o galerías internas',
+      'Hojas secas acumuladas cerca de la planta',
+    ],
+    riesgo: 'Daña hijuelos y plantas jóvenes; las hojas secas facilitan su avance.',
+    urgencia: 'Actuar en 2–3 días',
+    pasos: [
+      'Quitar hojas secas (poda sanitaria)',
+      'Revisar hijuelos y vivero',
+      'Marcar plantas con orificios',
+      'Evitar humedad excesiva en la base',
+    ],
+  },
+  default: {
+    id: 'default',
+    nombre: 'Alerta de campo',
+    icon: 'alerta',
+    color: '#b45309',
+    bg: '#fffbeb',
+    que_es: 'Reporte fitosanitario enviado desde el scouting del productor.',
+    como_se_ve: ['Revisar notas y foto del reporte', 'Confirmar en campo si es posible'],
+    riesgo: 'Depende del caso; conviene validar en sitio.',
+    urgencia: 'Revisar pronto',
+    pasos: [
+      'Leer la nota del productor',
+      'Ubicar el GPS o la parcela',
+      'Confirmar el problema en campo',
+      'Aplicar el protocolo que corresponda',
+    ],
+  },
+}
+
+export function guiaFitoDe(clasificacion) {
+  const key = String(clasificacion || '')
+    .toLowerCase()
+    .trim()
+  if (FITO_GUIA[key]) return FITO_GUIA[key]
+  if (key.includes('cochinilla')) return FITO_GUIA.cochinilla
+  if (key.includes('erwinia') || key.includes('pudric')) return FITO_GUIA.pudricion_erwinia
+  if (key.includes('picudo')) return FITO_GUIA.picudo_agave
+  return FITO_GUIA.default
+}

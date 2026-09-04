@@ -21,7 +21,7 @@ import {
 import EficienciaMexico from '../components/EficienciaMexico'
 import DashboardCorporativo from '../components/DashboardCorporativo'
 import ModelosEmpresaHub from '../components/ModelosEmpresaHub'
-import { EMPRESA_DEMO, PROTOCOLO_COCHINILLA } from '../empresaDemo'
+import { EMPRESA_DEMO, guiaFitoDe } from '../empresaDemo'
 import { B2B, CHART_GRID, CHART_TOOLTIP } from '../empresaTheme'
 import { currentPath, navigate } from '../routing'
 import { AppIcon } from '../components/AppIcon'
@@ -71,7 +71,7 @@ const NAV = [
   {
     path: '/empresa/alertas',
     label: 'Alertas',
-    desc: 'Avisos de plagas y salud del cultivo',
+    desc: 'Plagas y enfermedades con qué hacer',
     icon: IconAlert,
   },
 ]
@@ -653,47 +653,207 @@ function HistorialCrecimiento({ token, crecimiento, demo }) {
   )
 }
 
+function formatFechaEs(fecha) {
+  if (!fecha) return 'Sin fecha'
+  const d = new Date(`${fecha}T12:00:00`)
+  if (Number.isNaN(d.getTime())) return String(fecha)
+  return d.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function severidadMeta(sev) {
+  const s = String(sev || '').toLowerCase()
+  if (s === 'critica' || s === 'crítica') return { label: 'Crítica', className: 'sev-critica' }
+  if (s === 'alta') return { label: 'Alta', className: 'sev-alta' }
+  if (s === 'media') return { label: 'Media', className: 'sev-media' }
+  if (s === 'baja') return { label: 'Baja', className: 'sev-baja' }
+  return { label: 'Por revisar', className: 'sev-media' }
+}
+
+function tipoReporteLabel(tipo) {
+  const t = String(tipo || '').toLowerCase()
+  if (t.includes('scouting')) return 'Scouting visual (foto / campo)'
+  if (t.includes('fitosanitario')) return 'Reporte fitosanitario'
+  return (tipo || 'Reporte').replaceAll('_', ' ')
+}
+
 function AlertasFito({ alertas }) {
   if (!alertas.length) {
     return (
-      <div className="b2b-card">
-        <p className="muted">Sin reportes fitosanitarios activos.</p>
+      <div className="b2b-card alerta-empty">
+        <AppIcon name="check" alt="" className="glyph-lg" />
+        <h3>Sin alertas activas</h3>
+        <p className="muted">
+          Cuando el productor reporte cochinilla, Erwinia o picudo desde el scouting, aparecerán aquí con
+          protocolo claro.
+        </p>
       </div>
     )
   }
 
+  const resumen = alertas.reduce(
+    (acc, a) => {
+      const key = String(a.clasificacion || a.datos?.clasificacion || 'otra').toLowerCase()
+      acc[key] = (acc[key] || 0) + 1
+      return acc
+    },
+    {}
+  )
+
   return (
-    <div className="alertas-grid">
-      {alertas.map((a) => {
-        const clasificacion = (a.clasificacion || a.datos?.clasificacion || '').toLowerCase()
-        const esCochinilla = clasificacion === 'cochinilla'
-        const foto = a.foto || (typeof a.datos?.foto === 'string' ? a.datos.foto : null)
-        const protocolo = a.protocolo_mitigacion || (esCochinilla ? PROTOCOLO_COCHINILLA : null)
-        return (
-          <article key={a.id} className={`b2b-card alerta-card ${esCochinilla ? 'alerta-cochinilla' : ''}`}>
-            <header>
-              <h3>
-                {(a.tipo || '').replaceAll('_', ' ')} · {a.fecha}
-              </h3>
-              {clasificacion && <span className="tag danger">{clasificacion}</span>}
-            </header>
-            {a.productor && <p className="muted">Productor: {a.productor}</p>}
-            <p>{a.notas}</p>
-            {foto && <img src={foto} alt="evidencia in situ" className="alerta-foto" />}
-            {a.gps_lat != null && (
-              <p className="gps-line">
-                GPS {a.gps_lat}, {a.gps_lng}
-              </p>
-            )}
-            {esCochinilla && protocolo && (
-              <div className="protocolo-box">
-                <strong>Protocolo de mitigación rápida</strong>
-                <p>{protocolo}</p>
+    <div className="alertas-wrap">
+      <section className="alerta-intro b2b-card">
+        <div>
+          <p className="alerta-kicker">Salud del cultivo · solo lectura</p>
+          <h2>Alertas fitosanitarias</h2>
+          <p>
+            Cada tarjeta explica <strong>qué es</strong>, <strong>cómo se ve</strong> y{' '}
+            <strong>qué hacer</strong>. Los iconos muestran la plaga o enfermedad reportada.
+          </p>
+        </div>
+        <div className="alerta-resumen">
+          <strong>{alertas.length}</strong>
+          <span>activas</span>
+          <ul>
+            {Object.entries(resumen).map(([k, n]) => {
+              const g = guiaFitoDe(k)
+              return (
+                <li key={k}>
+                  <AppIcon name={g.icon} alt="" className="glyph-xs" />
+                  {g.nombre}: {n}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </section>
+
+      <div className="alertas-grid">
+        {alertas.map((a) => {
+          const clasificacion = (a.clasificacion || a.datos?.clasificacion || '').toLowerCase()
+          const guia = guiaFitoDe(clasificacion)
+          const fotoRaw = typeof a.foto === 'string' ? a.foto : typeof a.datos?.foto === 'string' ? a.datos.foto : null
+          const foto =
+            fotoRaw &&
+            (fotoRaw.startsWith('http') ||
+              (fotoRaw.startsWith('data:image') && fotoRaw.length > 200))
+              ? fotoRaw
+              : null
+          const sev = severidadMeta(a.severidad || (guia.id === 'pudricion_erwinia' ? 'critica' : 'alta'))
+          const protocoloTexto = a.protocolo_mitigacion
+          const pasos = guia.pasos
+
+          return (
+            <article
+              key={a.id}
+              className={`b2b-card alerta-card alerta-${guia.id}`}
+              style={{ borderColor: `${guia.color}55` }}
+            >
+              <header className="alerta-card-head">
+                <div className="alerta-ident" style={{ background: guia.bg }}>
+                  <AppIcon name={guia.icon} alt={guia.nombre} className="glyph-lg" />
+                  <div>
+                    <p className="alerta-kicker" style={{ color: guia.color }}>
+                      {tipoReporteLabel(a.tipo)}
+                    </p>
+                    <h3>{guia.nombre}</h3>
+                    <p className="alerta-fecha">{formatFechaEs(a.fecha)}</p>
+                  </div>
+                </div>
+                <div className="alerta-badges">
+                  <span className={`alerta-sev ${sev.className}`}>{sev.label}</span>
+                  <span className="alerta-estado">{a.estado === 'activa' || !a.estado ? 'Activa' : a.estado}</span>
+                </div>
+              </header>
+
+              <div className="alerta-body">
+                <div className="alerta-main">
+                  <section className="alerta-block">
+                    <h4>Qué está pasando</h4>
+                    <p>{a.notas || guia.que_es}</p>
+                  </section>
+
+                  <section className="alerta-block">
+                    <h4>Qué es {guia.nombre.toLowerCase()}</h4>
+                    <p>{guia.que_es}</p>
+                    <p className="alerta-riesgo">
+                      <strong>Riesgo:</strong> {guia.riesgo}
+                    </p>
+                    <p className="alerta-urgencia">
+                      <strong>Urgencia:</strong> {guia.urgencia}
+                    </p>
+                  </section>
+
+                  <section className="alerta-meta">
+                    {a.productor ? (
+                      <div>
+                        <span>Productor</span>
+                        <strong>{a.productor}</strong>
+                      </div>
+                    ) : null}
+                    {a.parcela ? (
+                      <div>
+                        <span>Parcela / lote</span>
+                        <strong>{a.parcela}</strong>
+                      </div>
+                    ) : null}
+                    {a.plantas_afectadas != null ? (
+                      <div>
+                        <span>Plantas reportadas</span>
+                        <strong>{a.plantas_afectadas}</strong>
+                      </div>
+                    ) : null}
+                    {a.gps_lat != null ? (
+                      <div>
+                        <span>Ubicación GPS</span>
+                        <strong className="gps-line">
+                          {Number(a.gps_lat).toFixed(4)}, {Number(a.gps_lng).toFixed(4)}
+                        </strong>
+                      </div>
+                    ) : null}
+                  </section>
+                </div>
+
+                <aside className="alerta-visual" style={{ background: guia.bg }}>
+                  <p className="alerta-visual-label">Cómo reconocerla</p>
+                  <div className="alerta-visual-ico">
+                    <AppIcon name={guia.icon} alt="" className="glyph-step" />
+                    <strong>{guia.nombre}</strong>
+                  </div>
+                  <ul>
+                    {guia.como_se_ve.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                  {foto ? (
+                    <figure className="alerta-foto-wrap">
+                      <img src={foto} alt={`Evidencia de campo: ${guia.nombre}`} className="alerta-foto" />
+                      <figcaption>Foto enviada desde el campo</figcaption>
+                    </figure>
+                  ) : (
+                    <p className="alerta-sin-foto">
+                      Sin foto adjunta. Usa el icono y la lista de signos para identificar el caso en
+                      campo.
+                    </p>
+                  )}
+                </aside>
               </div>
-            )}
-          </article>
-        )
-      })}
+
+              <div className="protocolo-box" style={{ borderColor: `${guia.color}44`, background: guia.bg }}>
+                <strong style={{ color: guia.color }}>Qué hacer ahora</strong>
+                {protocoloTexto ? <p className="alerta-protocolo-extra">{protocoloTexto}</p> : null}
+                <ol className="alerta-pasos">
+                  {pasos.map((paso, i) => (
+                    <li key={paso}>
+                      <span>{i + 1}</span>
+                      {paso}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </div>
   )
 }
