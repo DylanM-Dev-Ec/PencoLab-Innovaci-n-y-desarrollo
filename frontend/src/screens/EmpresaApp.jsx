@@ -20,6 +20,7 @@ import {
 } from '../api'
 import EficienciaMexico from '../components/EficienciaMexico'
 import DashboardCorporativo from '../components/DashboardCorporativo'
+import ModelosEmpresaHub from '../components/ModelosEmpresaHub'
 import { EMPRESA_DEMO, PROTOCOLO_COCHINILLA } from '../empresaDemo'
 import { B2B, CHART_GRID, CHART_TOOLTIP } from '../empresaTheme'
 import { currentPath, navigate } from '../routing'
@@ -54,6 +55,12 @@ const NAV = [
     label: 'Método MX',
     desc: 'Comparación con el protocolo mexicano',
     icon: IconLeaf,
+  },
+  {
+    path: '/empresa/modelos',
+    label: 'Modelos',
+    desc: 'Calculadoras: cosecha, supervivencia, escala y carbono',
+    icon: IconFormula,
   },
   {
     path: '/empresa/mapa',
@@ -330,6 +337,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
               <EficienciaMexico token={token} demo={demo} />
             </>
           )}
+          {path === '/empresa/modelos' && <ModelosEmpresaHub campoData={campoData} />}
           {path === '/empresa/mapa' && <MapaCalor parcelas={parcelas} />}
           {path === '/empresa/crecimiento' && (
             <HistorialCrecimiento token={token} crecimiento={crecimiento} demo={demo} />
@@ -729,6 +737,14 @@ function IconTrend() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
       <path d="M4 18l5-6 4 3 7-9" />
       <path d="M14 6h6v6" />
+    </svg>
+  )
+}
+function IconFormula() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M5 5h6M5 12h14M5 19h10" />
+      <path d="M16 5l3 3-3 3" />
     </svg>
   )
 }

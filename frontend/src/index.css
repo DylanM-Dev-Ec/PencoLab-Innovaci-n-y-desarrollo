@@ -1877,6 +1877,299 @@ body.agro-page {
   .b2b-topbar { padding-left: 16px; padding-right: 16px; }
 }
 
+/* ?? Modelos matemáticos B2B ?? */
+.b2b-modelos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.b2b-modelos-hero {
+  background: linear-gradient(135deg, #ecf3ee 0%, #f8faf9 55%, #fff 100%);
+  border: 1px solid var(--b2b-line);
+  border-radius: 18px;
+  padding: 22px 24px 20px;
+}
+.b2b-modelos-kicker {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--b2b-teal);
+}
+.b2b-modelos-hero h2 {
+  margin: 0 0 8px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--b2b-forest);
+  letter-spacing: -0.02em;
+}
+.b2b-modelos-hero p {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--b2b-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.b2b-modelos-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.b2b-modelos-tabs button {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--b2b-line);
+  background: var(--b2b-paper);
+  color: var(--b2b-slate);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.b2b-modelos-tabs button strong {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--b2b-text);
+}
+.b2b-modelos-tabs button span {
+  font-size: 0.75rem;
+  color: var(--b2b-muted);
+}
+.b2b-modelos-tabs button:hover {
+  border-color: #c5d9cc;
+  background: #f8faf9;
+}
+.b2b-modelos-tabs button.on {
+  border-color: var(--b2b-forest);
+  background: #ecf3ee;
+  box-shadow: inset 0 0 0 1px rgba(13, 79, 54, 0.12);
+}
+.b2b-modelos-tabs button.on strong {
+  color: var(--b2b-forest);
+}
+.b2b-modelos-panel {
+  background: var(--b2b-paper);
+  border: 1px solid var(--b2b-line);
+  border-radius: 18px;
+  padding: 20px 22px 22px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+}
+.b2b-modelos-head h3 {
+  margin: 0 0 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.12rem;
+  font-weight: 650;
+  color: var(--b2b-forest);
+}
+.b2b-modelos-head p {
+  margin: 0 0 14px;
+  color: var(--b2b-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.b2b-modelos-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f3f6f4;
+  border: 1px dashed #c5d9cc;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--b2b-slate);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.b2b-modelos-formula span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--b2b-teal);
+}
+.b2b-modelos-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 16px;
+  margin-bottom: 18px;
+}
+.b2b-modelos-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.b2b-modelos-controls label span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--b2b-slate);
+}
+.b2b-modelos-controls input[type='range'] {
+  width: 100%;
+  accent-color: var(--b2b-forest);
+}
+.b2b-modelos-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.b2b-modelos-presets button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--b2b-line);
+  background: #f8faf9;
+  cursor: pointer;
+  color: var(--b2b-slate);
+}
+.b2b-modelos-presets button strong {
+  font-size: 1rem;
+  color: var(--b2b-forest);
+}
+.b2b-modelos-presets button span {
+  font-size: 0.72rem;
+  color: var(--b2b-muted);
+}
+.b2b-modelos-presets button.on {
+  border-color: var(--b2b-forest);
+  background: #ecf3ee;
+}
+.b2b-modelos-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.b2b-modelos-stats article {
+  background: #f8faf9;
+  border: 1px solid var(--b2b-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.b2b-modelos-stats article.accent {
+  background: #ecf3ee;
+  border-color: #c5d9cc;
+}
+.b2b-modelos-stats article span {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--b2b-muted);
+  margin-bottom: 6px;
+}
+.b2b-modelos-stats article strong {
+  display: block;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--b2b-forest);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.b2b-modelos-stats article small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--b2b-muted);
+  line-height: 1.3;
+}
+.b2b-modelos-tip {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.b2b-modelos-chart {
+  margin-top: 8px;
+}
+.b2b-modelos-chart h4,
+.b2b-modelos-table-wrap h4 {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--b2b-slate);
+}
+.b2b-modelos-progress {
+  margin-bottom: 18px;
+}
+.b2b-modelos-progress-bar {
+  height: 10px;
+  border-radius: 99px;
+  background: #eef2f0;
+  overflow: hidden;
+}
+.b2b-modelos-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--b2b-teal), var(--b2b-forest));
+  transition: width 0.25s ease;
+}
+.b2b-modelos-progress small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--b2b-muted);
+}
+.b2b-modelos-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.b2b-modelos-table-wrap {
+  overflow-x: auto;
+}
+.b2b-modelos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.b2b-modelos-table th,
+.b2b-modelos-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--b2b-line);
+}
+.b2b-modelos-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--b2b-muted);
+  background: #f8faf9;
+}
+.b2b-modelos-table td {
+  color: var(--b2b-text);
+}
+.b2b-modelos-table td:last-child {
+  font-weight: 650;
+  color: var(--b2b-forest);
+}
+@media (max-width: 900px) {
+  .b2b-modelos-grid2 { grid-template-columns: 1fr; }
+}
+
 /* ?? Portal Agricultor: UI m?vil clara (Odoo + Tend + PRISMAB) ?? */
 .m-app {
   --m-forest: #0d4f36;
