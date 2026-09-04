@@ -1528,7 +1528,10 @@ body.agro-page {
   --b2b-muted: #64748b;
   display: flex;
   min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   width: 100%;
+  overflow: hidden;
   background: var(--b2b-canvas);
   color: var(--b2b-text);
   font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
@@ -1544,6 +1547,12 @@ body.agro-page {
   padding: 22px 14px 18px;
   transition: width 0.2s ease;
   color: #e8f5ef;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  align-self: stretch;
 }
 .b2b-shell.is-collapsed .b2b-sidebar { width: 76px; }
 .b2b-brand {
@@ -1551,6 +1560,7 @@ body.agro-page {
   align-items: center;
   gap: 10px;
   padding: 4px 8px 22px;
+  flex-shrink: 0;
 }
 .b2b-mark {
   width: 40px;
@@ -1576,7 +1586,21 @@ body.agro-page {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+.b2b-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.b2b-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 99px;
 }
 .b2b-nav button,
 .b2b-ghost {
@@ -1641,13 +1665,19 @@ body.agro-page {
   flex-direction: column;
   gap: 2px;
   padding-top: 14px;
+  margin-top: auto;
+  flex-shrink: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--b2b-forest);
 }
 .b2b-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .b2b-topbar {
   display: flex;
@@ -1862,15 +1892,73 @@ body.agro-page {
   .b2b-grid-2 { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 800px) {
-  .b2b-shell { flex-direction: column; }
+  .b2b-shell {
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
   .b2b-sidebar,
   .b2b-shell.is-collapsed .b2b-sidebar {
     width: 100%;
+    height: auto;
+    max-height: none;
+    position: relative;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    flex-shrink: 0;
+    padding: 12px 12px 0;
+  }
+  .b2b-brand {
+    padding-bottom: 10px;
+  }
+  .b2b-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 0 0 auto;
+    gap: 6px;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .b2b-nav button {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .b2b-nav-copy small {
+    display: none;
+  }
+  .b2b-side-foot {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
+    justify-content: space-around;
+    gap: 4px;
+    margin-top: 0;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 -8px 24px rgba(13, 79, 54, 0.25);
   }
-  .b2b-nav { flex-direction: row; flex-wrap: wrap; }
+  .b2b-side-foot .b2b-ghost {
+    width: auto;
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+  .b2b-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
   .b2b-kpis,
   .b2b-grid-2 { grid-template-columns: 1fr; }
   .b2b-body,
