@@ -562,62 +562,115 @@ function FormularioSuelos({ data, scope, onAdd }) {
 function PlanSiembraPanel({ plan, tipo }) {
   const r = plan.rendimiento
   const ha = plan.hectareas || 0
+  const porHa = plan.pencos_por_ha || 0
   const showPapa = tipo?.id === 'intercalado_papa'
   const baseIcon = tipo?.id === 'vivero_semilla' ? 'penco' : tipo?.icon === 'papa' ? 'penco' : tipo?.icon || 'penco'
+  const unidad = plan.vivero ? 'plantines' : 'plantas'
 
-  // Más hectáreas → más iconos; menos → iconos más grandes (sin huecos)
-  const visualCount = Math.min(48, Math.max(4, Math.round(2.8 + ha * 2.4)))
-  const cols = Math.max(2, Math.round(Math.sqrt(visualCount * 1.25)))
-  const rows = Math.max(2, Math.ceil(visualCount / cols))
-  const cells = cols * rows
-  const iconPx = Math.round(Math.min(56, Math.max(16, 200 / Math.sqrt(cells))))
+  // Cada cuadro = 1 ha (máx. 10 visibles; el resto se resume)
+  const maxTiles = 10
+  const fullHa = Math.floor(ha)
+  const frac = Math.round((ha - fullHa) * 100) / 100
+  const tileCount = Math.min(maxTiles, Math.ceil(ha) || 1)
+  const hiddenHa = Math.max(0, Math.round((ha - maxTiles) * 100) / 100)
+
+  const plantas1Ha = porHa
+  const plantasTuyas = plan.pencos_totales
 
   return (
     <div className="m-plan">
+      <div className="plan-guide-callout">
+        <p className="plan-guide-formula">
+          <strong>1 ha</strong> ≈ {plantas1Ha.toLocaleString()} {unidad}
+          <span aria-hidden> → </span>
+          <strong>
+            {ha} ha ≈ {plantasTuyas.toLocaleString()} {unidad}
+          </strong>
+        </p>
+        <p className="plan-guide-sub">
+          Marco: {plan.espaciamiento}. Área útil ~{plan.area_util_ha} ha (caminos y bordes).
+        </p>
+      </div>
+
       <div className="m-plan-stats">
         <div>
-          <strong>{plan.pencos_totales.toLocaleString()}</strong>
-          <span>{plan.vivero ? 'plantines' : 'plantas'}</span>
+          <strong>{plantasTuyas.toLocaleString()}</strong>
+          <span>{unidad} en tu lote</span>
         </div>
         <div>
           <strong>{ha}</strong>
           <span>hectáreas</span>
         </div>
         <div>
-          <strong>
-            {plan.vivero ? `${tipo.entre_plantas_m}m` : `${Math.round(r.litros_chaguarmishky_mid / 1000)}k`}
-          </strong>
-          <span>{plan.vivero ? 'marco' : 'litros'}</span>
+          <strong>{plantas1Ha.toLocaleString()}</strong>
+          <span>{unidad} / ha</span>
         </div>
       </div>
-      <p className="m-plan-layout">{plan.division.layout}</p>
-      <p className="m-plan-esp">{plan.espaciamiento}</p>
 
-      <div
-        className="plan-icon-field"
-        aria-label={`Vista del lote: ${plan.pencos_totales} plantas en ${ha} ha`}
-        style={{
-          '--plan-cols': cols,
-          '--plan-rows': rows,
-          '--plan-ico': `${iconPx}px`,
-        }}
-      >
-        {Array.from({ length: cells }).map((_, i) => {
-          const c = i % cols
-          const usePapa = showPapa && c % 2 === 1
+      <p className="plan-ha-legend">
+        Cada cuadro verde = <strong>1 hectárea</strong>. Cuantos más cuadros, más grande el lote y más{' '}
+        {unidad}.
+      </p>
+
+      <div className="plan-ha-tiles" aria-label={`${ha} hectáreas`}>
+        {Array.from({ length: tileCount }).map((_, i) => {
+          const isPartial = i === fullHa && frac > 0 && i < maxTiles
+          const fill = isPartial ? Math.max(0.2, frac) : 1
           return (
-            <span key={i} className="plan-icon-cell">
-              <AppIcon name={usePapa ? 'papa' : baseIcon} alt="" />
-            </span>
+            <div
+              key={i}
+              className={`plan-ha-tile ${isPartial ? 'partial' : ''}`}
+              style={{ '--ha-fill': fill }}
+              title={isPartial ? `${frac} ha` : '1 ha'}
+            >
+              <div className="plan-ha-tile-fill">
+                <span className="plan-ha-tile-icos">
+                  <AppIcon name={baseIcon} alt="" />
+                  {showPapa ? <AppIcon name="papa" alt="" /> : <AppIcon name={baseIcon} alt="" />}
+                  <AppIcon name={baseIcon} alt="" />
+                  <AppIcon name={baseIcon} alt="" />
+                </span>
+                <em>{isPartial ? `${frac} ha` : '1 ha'}</em>
+              </div>
+            </div>
           )
         })}
+        {hiddenHa > 0 && (
+          <div className="plan-ha-tile more" title={`+${hiddenHa} ha`}>
+            <strong>+{hiddenHa}</strong>
+            <span>ha más</span>
+          </div>
+        )}
       </div>
 
-      <p className="plan-grid-caption">
-        Cada ícono representa el lote: con menos hectáreas se ven más grandes; con más, se llenan
-        más plantas. Estimado real: {plan.pencos_totales.toLocaleString()}{' '}
-        {plan.vivero ? 'plantines' : 'plantas'} en {ha} ha.
-      </p>
+      <div className="plan-compare" aria-label="Comparación 1 ha frente a tu lote">
+        <div className="plan-compare-col">
+          <span className="plan-compare-label">Referencia</span>
+          <strong>1 ha</strong>
+          <p>{plantas1Ha.toLocaleString()} {unidad}</p>
+          <div className="plan-compare-bar">
+            <i style={{ width: '12%' }} />
+          </div>
+        </div>
+        <div className="plan-compare-col on">
+          <span className="plan-compare-label">Tu lote</span>
+          <strong>{ha} ha</strong>
+          <p>
+            {plantasTuyas.toLocaleString()} {unidad}
+          </p>
+          <div className="plan-compare-bar">
+            <i style={{ width: `${Math.min(100, (ha / 20) * 100)}%` }} />
+          </div>
+        </div>
+      </div>
+
+      <p className="m-plan-layout">{plan.division.layout}</p>
+      {!plan.vivero && (
+        <p className="plan-grid-caption">
+          Chaguarmishky estimado (ciclo): ~{Math.round(r.litros_chaguarmishky_mid).toLocaleString()} L
+          en total para {ha} ha.
+        </p>
+      )}
       <p className="m-plan-consejo">{plan.division.consejo}</p>
     </div>
   )

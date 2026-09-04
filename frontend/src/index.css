@@ -2468,37 +2468,148 @@ body.agro-page {
   border-radius: 16px;
   padding: 12px;
 }
-.plan-icon-field {
-  --plan-cols: 4;
-  --plan-rows: 3;
-  --plan-ico: 36px;
-  display: grid;
-  grid-template-columns: repeat(var(--plan-cols), 1fr);
-  grid-template-rows: repeat(var(--plan-rows), 1fr);
-  gap: 6px;
-  width: 100%;
-  margin: 12px 0 8px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid #d7eadf;
-  background: linear-gradient(180deg, #eef6f1 0%, #e2efe6 100%);
-  aspect-ratio: 1.35 / 1;
-  min-height: 140px;
+.plan-guide-callout {
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #eef6f1;
+  border: 1px solid #cfe5d8;
 }
-.plan-icon-cell {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  min-height: 0;
+.plan-guide-formula {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #334155;
+  line-height: 1.45;
 }
-.plan-icon-cell .app-icon {
-  width: var(--plan-ico) !important;
-  height: var(--plan-ico) !important;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 10px;
+.plan-guide-formula strong {
+  color: #0d4f36;
+}
+.plan-guide-sub {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+.plan-ha-legend {
+  margin: 10px 0 8px;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.35;
+}
+.plan-ha-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.plan-ha-tile {
+  --ha-fill: 1;
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 1.5px solid #0d4f36;
+  background: #d7eadf;
+  overflow: hidden;
+}
+.plan-ha-tile-fill {
+  width: calc(var(--ha-fill) * 100%);
+  height: 100%;
+  background: linear-gradient(160deg, #e8f5ee, #cfe5d8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+}
+.plan-ha-tile.partial {
+  border-style: dashed;
+}
+.plan-ha-tile-icos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  width: 70%;
+}
+.plan-ha-tile-icos .app-icon {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  border-radius: 6px;
   object-fit: cover;
-  transition: width 0.2s ease, height 0.2s ease;
+}
+.plan-ha-tile em {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #0d4f36;
+}
+.plan-ha-tile.more {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: #fff;
+  border-style: dashed;
+  color: #0d4f36;
+}
+.plan-ha-tile.more strong {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.plan-ha-tile.more span {
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.plan-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.plan-compare-col {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #d7eadf;
+  background: #fff;
+}
+.plan-compare-col.on {
+  border-color: #0d4f36;
+  background: #eef6f1;
+}
+.plan-compare-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+.plan-compare-col strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #0d4f36;
+  line-height: 1.1;
+}
+.plan-compare-col p {
+  margin: 4px 0 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+.plan-compare-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #d7eadf;
+  overflow: hidden;
+}
+.plan-compare-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0d4f36;
+  font-style: normal;
+  transition: width 0.25s ease;
 }
 
 .m-app .trazado-visual,
