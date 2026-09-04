@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { checkHealth, loginUser } from './api'
 import { applySession, loadStore, resetStore, saveStore } from './store'
-import { currentPath, navigate, tokenRol } from './routing'
+import { currentPath, navigate, tokenRol, scrollRouteToTop } from './routing'
 import { MY_ACCOUNT } from './myAccount'
 import { buildProductorDemoSeed } from './demoSeed'
 import RootHub from './screens/RootHub'
@@ -63,6 +63,7 @@ export default function App() {
       enforceRoute(rol, token)
       setPath(currentPath())
       setLoginPortal(preferredPortalFromQuery())
+      scrollRouteToTop()
     }
     window.addEventListener('hashchange', onHash)
     if (!window.location.hash || window.location.hash === '#') {
@@ -73,6 +74,10 @@ export default function App() {
     }
     return () => window.removeEventListener('hashchange', onHash)
   }, [rol, token])
+
+  useEffect(() => {
+    scrollRouteToTop()
+  }, [path])
 
   useEffect(() => {
     const onOnline = () => setOnline(true)
