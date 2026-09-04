@@ -47,13 +47,13 @@ const NAV = [
     path: '/productor/circular',
     icon: 'abono',
     label: 'Residuos',
-    desc: 'Aprovecha fibra, hoja y kirillas: plata extra',
+    desc: 'Aprovecha fibra, hoja y kirillas: ingreso adicional',
   },
   {
     path: '/productor/riqueza',
     icon: 'plata',
     label: 'Plan',
-    desc: 'Calcula cuánto puedes ganar con tus hectáreas',
+    desc: 'Calcula el ingreso estimado de tus hectáreas',
   },
   {
     path: '/productor/bitacora',

@@ -167,8 +167,8 @@ export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online,
     }
     return {
       nivel: 'ok',
-      title: 'Hijuelo listo pa cicatrizar',
-      text: 'Cumple edad, peso, roseta y firmeza. Pasa a curar el corte.',
+      title: 'Hijuelo listo para cicatrizar',
+      text: 'Cumple edad, peso, roseta y firmeza. Continúa con la curación del corte.',
     }
   }, [edadOk, pesoOk, rosetaOk, firmeOk, form.firmeza])
 
@@ -309,7 +309,7 @@ export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online,
         </button>
         <p className="guia-kicker">Práctica de campo</p>
         <h2>Guía interactiva</h2>
-        <p>Decides como en la chacra. Cada escena te dice qué está bien y qué conviene cambiar.</p>
+        <p>Practica cada decisión del lote. Cada escena indica qué está bien y qué conviene ajustar.</p>
         <div className="practica-score" aria-label="Avance">
           <div className="practica-score-bar">
             <i style={{ width: `${progressPct}%` }} />
@@ -531,7 +531,7 @@ export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online,
               ))}
             </div>
             <div className="practica-verdict ok">
-              <strong>Plata temprana mientras crece el penco</strong>
+              <strong>Ingreso temprano mientras crece el penco</strong>
               <p>
                 Las calles de ~{ESPACIO_SURCO_M} m no son espacio perdido: ahí va {form.intercalado} el primer
                 año.

@@ -9,35 +9,35 @@ const GUIAS = [
     titulo: 'pH del suelo',
     corto: 'Acidez de la tierra',
     texto:
-      'Es qué tan ácida o alcalina está tu tierra. El penco anda bien entre 6 y 7. Si está bajo de 6, mete cal y composta. Si pasa de 8, yeso o azufre.',
+      'Indica qué tan ácida o alcalina está tu tierra. El penco se desarrolla bien entre 6 y 7. Si está bajo de 6, conviene aplicar cal y composta. Si pasa de 8, yeso o azufre.',
   },
   {
     id: 'hijuelo',
     titulo: 'Hijuelo bueno',
     corto: 'La planta hija',
     texto:
-      'Sale de la madre. Busca firme (no bofo), de 1.5 a 3 kg o roseta de 8 a 11 cm, y madre de 3 a 5 años. Corte limpio, 10 días al sol y listo pa sembrar.',
+      'Sale de la planta madre. Busca uno firme (no bofo), de 1.5 a 3 kg o roseta de 8 a 11 cm, con madre de 3 a 5 años. Corte limpio, 10 días al sol y listo para sembrar.',
   },
   {
     id: 'surcos',
     titulo: 'Calles de 3 metros',
     corto: 'Espacio entre surcos',
     texto:
-      'Entre surcos deja ~3 m. Ahí metes papa, quinoa o chocho el primer año: plata temprano mientras el penco crece.',
+      'Entre surcos deja unos 3 m. Ahí puedes sembrar papa, quinoa o chocho el primer año: ingreso temprano mientras el penco crece.',
   },
   {
     id: 'co2',
     titulo: 'Carbono / CO₂',
     corto: 'Aire que captura la planta',
     texto:
-      'Cuánto CO₂ “guarda” tu lote. Hay estimado (con medidas) y verificado in situ. La meta del proyecto: 15 toneladas.',
+      'Cuánto CO₂ retiene tu lote. Hay estimado (con medidas) y verificado in situ. La meta del proyecto: 15 toneladas.',
   },
   {
     id: 'circular',
     titulo: 'Economía circular',
     corto: 'Nada se pierde',
     texto:
-      'Fibra, kirillas, madera y hoja también valen plata: canastas, alpargatas, encurtidos y abono. No solo la leche del penco.',
+      'Fibra, kirillas, madera y hoja también generan valor: canastas, alpargatas, encurtidos y abono. No solo la leche del penco.',
   },
 ]
 
@@ -106,11 +106,11 @@ export default function RootHub({
 
       {paso === 'bienvenida' && (
         <section className="welcome-hero">
-          <p className="welcome-kicker">Hecho pa gente de campo</p>
+          <p className="welcome-kicker">Herramienta para productores</p>
           <h1>Bienvenido a PencoLab</h1>
           <p className="welcome-lead">
-            Los agricultores trabajan bajo la educación de la experiencia. Aquí no hay teoría
-            enredada: anotas el lote, cuidas el penco y ves plata, carbono y alertas sin perderte.
+            Los agricultores trabajan con la educación de la experiencia. Aquí registras el lote,
+            cuidas el penco y revisas ingresos, carbono y alertas de forma clara.
           </p>
           <div className="welcome-cta-row">
             <button type="button" className="welcome-cta primary" onClick={() => setPaso('entrar')}>
@@ -131,10 +131,10 @@ export default function RootHub({
       {paso === 'quehace' && (
         <section className="welcome-explain">
           <header>
-            <h2>¿Qué hace esta vaina?</h2>
+            <h2>¿Qué puedes hacer aquí?</h2>
             <p>
-              Dos puertas: una pa ti en el lote (teléfono) y otra pa la empresa (números y mapa).
-              Toca el <strong>?</strong> si no conoces la palabra.
+              Hay dos accesos: uno para el productor en el lote (desde el móvil) y otro para la
+              empresa (indicadores y mapa). Toca el <strong>?</strong> si necesitas una explicación.
             </p>
           </header>
 
@@ -171,7 +171,7 @@ export default function RootHub({
             <li>
               <AppIcon name="bitacora" alt="" className="glyph-sm" />
               <span>
-                <strong>Diario</strong>: riego, plagas y fotos pa no olvidar qué pasó.
+                <strong>Diario</strong>: riego, plagas y fotos para llevar el seguimiento del lote.
               </span>
             </li>
             <li>
@@ -191,8 +191,8 @@ export default function RootHub({
       {paso === 'entrar' && (
         <section className="welcome-enter">
           <header>
-            <h2>¿Pa dónde vamos?</h2>
-            <p>Elige tu puerta. Si eres de campo, Agricultor. Si miras la red, Empresa.</p>
+            <h2>¿Cómo quieres entrar?</h2>
+            <p>Elige tu acceso: productor en el lote, o empresa para seguimiento de la red.</p>
           </header>
 
           {error && <div className="m-toast warn">{error}</div>}
@@ -234,14 +234,14 @@ export default function RootHub({
                   <HelpQ
                     open={tipOpen === 'portal-agri'}
                     onToggle={() => toggleTip('portal-agri')}
-                    text="Aquí siembras, anotas el lote, riegas, miras plagas y calculas tu plata del penco. Es el celular del campo."
+                    text="Aquí registras siembra, riego, plagas y el ingreso estimado del penco. Es la herramienta del productor."
                   />
                 </strong>
                 <span>Siembra · bitácora · CO₂</span>
                 {tipOpen === 'portal-agri' && (
                   <em className="welcome-inline-tip">
-                    Aquí siembras, anotas el lote, riegas, miras plagas y calculas tu plata del penco.
-                    Es el celular del campo.
+                    Aquí registras siembra, riego, plagas y el ingreso estimado del penco. Es la
+                    herramienta del productor.
                   </em>
                 )}
               </div>
@@ -263,14 +263,14 @@ export default function RootHub({
                   <HelpQ
                     open={tipOpen === 'portal-emp'}
                     onToggle={() => toggleTip('portal-emp')}
-                    text="Consola pa ver productores, mapa, alertas y la curva de ingresos + carbono. No cambia los datos del campo."
+                    text="Panel para consultar productores, mapa, alertas y la proyección de ingresos más carbono. No modifica los datos del lote."
                   />
                 </strong>
-                <span>Dashboard · mapa · alertas</span>
+                <span>Resumen · mapa · alertas</span>
                 {tipOpen === 'portal-emp' && (
                   <em className="welcome-inline-tip">
-                    Consola pa ver productores, mapa, alertas y la curva de ingresos + carbono. No
-                    cambia los datos del campo.
+                    Panel para consultar productores, mapa, alertas y la proyección de ingresos más
+                    carbono. No modifica los datos del lote.
                   </em>
                 )}
               </div>
@@ -283,13 +283,13 @@ export default function RootHub({
             <HelpQ
               open={tipOpen === 'clave'}
               onToggle={() => toggleTip('clave')}
-              text="Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa ya te mete con datos de Carchi."
+              text="Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa carga datos de ejemplo de Carchi."
             />
           </p>
           {tipOpen === 'clave' && (
             <p className="welcome-inline-tip center">
-              Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa ya te mete con
-              datos de Carchi.
+              Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa carga datos de
+              ejemplo de Carchi.
             </p>
           )}
 
