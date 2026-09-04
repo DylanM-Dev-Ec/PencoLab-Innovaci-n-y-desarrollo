@@ -19,8 +19,50 @@ export const USD_POR_PLANTA_MADUREZ = 160
 export const USD_INTERCALADO_HA_6M = 1200
 /** t CO₂e / ha de referencia comunitaria (alineado con Plan productor) */
 export const CO2_TON_POR_HA = 5
+export const EFICIENCIA_DESTILACION_DEFAULT = 0.55
+export const DIAS_TEMPORADA_DEFAULT = 60
+/** Plantas maduras en producción (año 12 del pitch Resumen) — misma fórmula que Modelos → Cosecha */
+export const PLANTAS_COSECHA_PITCH_ANO12 = 1800
+/** Mortalidad de referencia compartida Resumen / Modelos */
+export const MORTALIDAD_REF_PCT = 12
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const NOMBRES_RECOLECTORAS = ['maria', 'rosa', 'ana']
+
+/** Ha del snapshot de campo (o HA_ACTUALES si vacío). */
+export function haFromCampo(campo) {
+  const ha = (campo?.parcelas || []).reduce((s, p) => s + (Number(p.area_hectareas) || 0), 0)
+  return ha > 0 ? Math.round(ha * 10) / 10 : HA_ACTUALES
+}
+
+/** Plantas vivas del snapshot; si no hay, proxy densidad alta × supervivencia 88%. */
+export function plantasFromCampo(campo) {
+  const plantas = campo?.plantas || []
+  const vivas = plantas.filter((p) => (p.estado || 'viva') !== 'muerta')
+  if (vivas.length > 0) return vivas.length
+  if (plantas.length > 0) return plantas.length
+  return Math.round(haFromCampo(campo) * DENSIDAD_ALTA_HA * 0.88)
+}
+
+/**
+ * Serie diaria de recolección repartida entre recolectoras (Resumen / género).
+ * Misma base que calcularCosechaVerano.serieDiariaDemo.
+ */
+export function serieRecoleccionDiaria(cosecha) {
+  const n = Math.max(1, cosecha.recolectoras || MUJERES_RECOLECTORAS)
+  const keys = NOMBRES_RECOLECTORAS.slice(0, Math.min(3, n))
+  while (keys.length < Math.min(3, n)) keys.push(`r${keys.length + 1}`)
+
+  return (cosecha.serieDiariaDemo || []).slice(0, 6).map((d, i) => {
+    const shares = keys.map((_, ki) => 0.28 + ((i + ki) % 3) * 0.04)
+    const sum = shares.reduce((a, b) => a + b, 0)
+    const row = { dia: d.dia, litros: d.litros, botellas: d.botellas, ventas: d.ventas }
+    keys.forEach((k, ki) => {
+      row[k] = Math.round((d.litros * shares[ki]) / sum)
+    })
+    return row
+  })
+}
 
 function round2(n) {
   return Math.round(Number(n) * 100) / 100
@@ -32,14 +74,14 @@ function round2(n) {
  */
 export function calcularCosechaVerano({
   plantasVivas = 3000,
-  diasTemporada = 60,
+  diasTemporada = DIAS_TEMPORADA_DEFAULT,
   litrosDiaPlanta = LITROS_DIA_POR_PLANTA,
-  eficienciaDestilacion = 0.55,
+  eficienciaDestilacion = EFICIENCIA_DESTILACION_DEFAULT,
   precioBotella = PRECIO_BOTELLA_USD,
   recolectoras = MUJERES_RECOLECTORAS,
 } = {}) {
   const plantas = Math.max(0, Math.round(Number(plantasVivas) || 0))
-  const dias = Math.max(1, Math.round(Number(diasTemporada) || 60))
+  const dias = Math.max(1, Math.round(Number(diasTemporada) || DIAS_TEMPORADA_DEFAULT))
   const lDia = Math.max(0, Number(litrosDiaPlanta) || 0)
   const eff = Math.min(1, Math.max(0, Number(eficienciaDestilacion) || 0))
   const precio = Math.max(0, Number(precioBotella) || 0)
@@ -98,7 +140,7 @@ export function calcularCosechaVerano({
 export function calcularSupervivenciaFinanciera({
   hectareas = HA_ACTUALES,
   densidadHa = DENSIDAD_ALTA_HA,
-  mortalidadPct = 12,
+  mortalidadPct = MORTALIDAD_REF_PCT,
   usdPorPlanta = USD_POR_PLANTA_MADUREZ,
   usdIntercaladoHa = USD_INTERCALADO_HA_6M,
 } = {}) {

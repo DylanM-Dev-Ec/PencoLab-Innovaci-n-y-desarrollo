@@ -30,6 +30,8 @@ import {
   calcularCosechaVerano,
   calcularEscalamientoHa,
   calcularSupervivenciaFinanciera,
+  haFromCampo,
+  plantasFromCampo,
 } from '../modelosEmpresa'
 
 const TABS = [
@@ -56,19 +58,6 @@ function num(n, d = 0) {
   })
 }
 
-function haFromCampo(campo) {
-  const ha = (campo?.parcelas || []).reduce((s, p) => s + (Number(p.area_hectareas) || 0), 0)
-  return ha > 0 ? Math.round(ha * 10) / 10 : HA_ACTUALES
-}
-
-function plantasFromCampo(campo) {
-  const plantas = campo?.plantas || []
-  const vivas = plantas.filter((p) => (p.estado || 'viva') !== 'muerta')
-  if (vivas.length > 0) return vivas.length
-  if (plantas.length > 0) return plantas.length
-  return Math.round(haFromCampo(campo) * DENSIDAD_ALTA_HA * 0.88)
-}
-
 export default function ModelosEmpresaHub({ campoData }) {
   const [tab, setTab] = useState('cosecha')
   const haSnap = haFromCampo(campoData)
@@ -81,8 +70,8 @@ export default function ModelosEmpresaHub({ campoData }) {
         <h2>Calculadoras del portafolio</h2>
         <p>
           Cuatro fórmulas alimentadas por el snapshot de campo
-          {campoData?.from_snapshot ? ' (datos del productor)' : ' (demo Carchi)'}. Ajusta sliders para
-          sensibilizar.
+          {campoData?.from_snapshot ? ' (datos del productor)' : ' (demo Carchi)'}. Son las mismas que
+          alimentan Resumen; aquí ajustas sliders para sensibilizar.
         </p>
       </header>
 

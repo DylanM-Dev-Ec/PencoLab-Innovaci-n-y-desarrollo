@@ -315,6 +315,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
                     }
               }
               residuos={campoData.residuos || []}
+              campoData={campoData}
             />
           )}
           {path === '/empresa/costos' && (

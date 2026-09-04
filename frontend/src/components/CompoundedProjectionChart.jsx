@@ -13,6 +13,13 @@ import {
   YAxis,
 } from 'recharts'
 import { META_CO2_TON, PRECIO_BOTELLA_USD } from '../agaveAndino'
+import {
+  DIAS_TEMPORADA_DEFAULT,
+  EFICIENCIA_DESTILACION_DEFAULT,
+  LITROS_DIA_POR_PLANTA,
+  PLANTAS_COSECHA_PITCH_ANO12,
+  calcularCosechaVerano,
+} from '../modelosEmpresa'
 
 /** Paleta de alto contraste: fases distintas + CO₂ azul (no verde). */
 const COLORS = {
@@ -86,7 +93,7 @@ const ACTIVIDADES = {
   9: 'Comercialización circular consolidada',
   10: 'Preparación de chawada · circular sigue activo',
   11: 'Último año circular antes de la gran cosecha',
-  12: `Destilación de verano, empleo femenino y venta a $${PRECIO_BOTELLA_USD}/L · chawarmishky 4 L/día`,
+  12: `Destilación de verano, empleo femenino y venta a $${PRECIO_BOTELLA_USD}/L · chawarmishky ${LITROS_DIA_POR_PLANTA} L/día × ${DIAS_TEMPORADA_DEFAULT} días × ${Math.round(EFICIENCIA_DESTILACION_DEFAULT * 100)}% (misma fórmula que Modelos)`,
 }
 
 function faseDeAno(year) {
@@ -95,11 +102,24 @@ function faseDeAno(year) {
   return FASES.cosecha
 }
 
-/** Ingresos acumulados USD según las 3 fases del pitch. */
+/** Ingreso año 12 = Modelos → Cosecha (pitch de plantas maduras) + circular acumulado previo. */
+function ingresoAno12Cosecha() {
+  const cosecha = calcularCosechaVerano({
+    plantasVivas: PLANTAS_COSECHA_PITCH_ANO12,
+    diasTemporada: DIAS_TEMPORADA_DEFAULT,
+    litrosDiaPlanta: LITROS_DIA_POR_PLANTA,
+    eficienciaDestilacion: EFICIENCIA_DESTILACION_DEFAULT,
+    precioBotella: PRECIO_BOTELLA_USD,
+  })
+  // Base circular al cierre año 11 + destilación estival (misma fórmula que Modelos)
+  return 12000 + 7 * 5000 + Math.round(cosecha.usd)
+}
+
+/** Ingresos acumulados USD según las 3 fases del pitch (año 12 alineado con Modelos). */
 export function ingresosAcumuladosAno(year) {
   if (year <= 4) return year * 3000
   if (year <= 11) return 12000 + (year - 4) * 5000
-  return 480000
+  return ingresoAno12Cosecha()
 }
 
 /** CO₂e lineal hasta la meta de 15 t en el año 12. */
@@ -193,6 +213,17 @@ function IngresoDot(props) {
  */
 export default function CompoundedProjectionChart({ className = '', height = 360 }) {
   const data = useMemo(() => buildSeries(), [])
+  const usdAno12 = data[11]?.ingresos ?? ingresoAno12Cosecha()
+  const cosechaPitch = useMemo(
+    () =>
+      calcularCosechaVerano({
+        plantasVivas: PLANTAS_COSECHA_PITCH_ANO12,
+        diasTemporada: DIAS_TEMPORADA_DEFAULT,
+        eficienciaDestilacion: EFICIENCIA_DESTILACION_DEFAULT,
+      }),
+    []
+  )
+  const yMax = Math.ceil(usdAno12 / 50000) * 50000 + 20000
 
   return (
     <section
@@ -232,7 +263,7 @@ export default function CompoundedProjectionChart({ className = '', height = 360
             style={{ background: COLORS.f3.badge, color: COLORS.f3.badgeText }}
           >
             <i className="inline-block h-2.5 w-2.5 rounded-full bg-white/90" aria-hidden />
-            Año 12 · $480k
+            Año 12 · {formatUsd(usdAno12)}
           </span>
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold"
@@ -313,7 +344,7 @@ export default function CompoundedProjectionChart({ className = '', height = 360
               tickLine={false}
               axisLine={false}
               width={52}
-              domain={[0, 500000]}
+              domain={[0, yMax]}
               label={{
                 value: 'USD',
                 angle: -90,
@@ -434,8 +465,9 @@ export default function CompoundedProjectionChart({ className = '', height = 360
           fibra, alpargatas, kirillas.
         </p>
         <p className="m-0">
-          <strong style={{ color: COLORS.f3.stroke }}>Año 12 (verde):</strong> $480 000 · destilación y
-          clima ({META_CO2_TON} t CO₂e en{' '}
+          <strong style={{ color: COLORS.f3.stroke }}>Año 12 (verde):</strong> {formatUsd(usdAno12)} ·
+          destilación = Modelos → Cosecha ({PLANTAS_COSECHA_PITCH_ANO12.toLocaleString()} plantas ·{' '}
+          {cosechaPitch.formula}) · clima ({META_CO2_TON} t CO₂e en{' '}
           <span style={{ color: COLORS.co2, fontWeight: 700 }}>azul</span>).
         </p>
       </footer>
