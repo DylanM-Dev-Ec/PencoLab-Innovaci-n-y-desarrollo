@@ -23,6 +23,7 @@ import AnalisisCostos from './AnalisisCostos'
 import AnotarLote from './AnotarLote'
 import GuiaInteractiva, { GuiaErrorBoundary } from './GuiaInteractiva'
 import MercadoPropagacion from './MercadoPropagacion'
+import RiegoInteligenteScreen from './RiegoInteligenteScreen'
 import { AppIcon } from '../components/AppIcon'
 
 const NAV = [
@@ -31,6 +32,12 @@ const NAV = [
     icon: 'tierra',
     label: 'Suelo',
     desc: 'Mide el pH y prepara tu tierra antes de sembrar',
+  },
+  {
+    path: '/productor/riego',
+    icon: 'riego',
+    label: 'Riego',
+    desc: 'Humedad a 20 cm, alertas y goteo inteligente',
   },
   {
     path: '/productor/anotar',
@@ -328,6 +335,7 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
         {(path === '/productor/suelos' || path === '/productor/suelo' || path === '/productor') && (
           <FormularioSuelos data={data} scope={scope} onAdd={addRecords} />
         )}
+        {path === '/productor/riego' && <RiegoInteligenteScreen />}
         {path === '/productor/andina' && (
           <RegistroSiembraAndina setMsg={setMsg} />
         )}

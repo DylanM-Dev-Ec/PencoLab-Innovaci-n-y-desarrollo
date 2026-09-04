@@ -6545,3 +6545,287 @@ body.light-page .login-shell .btn-primary {
     grid-template-columns: 1fr;
   }
 }
+
+/* —— Riego inteligente (sensores 20 cm) —— */
+.riego-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 8px;
+}
+.riego-hero {
+  background: linear-gradient(160deg, #ecf3ee 0%, #ffffff 72%);
+  border: 1px solid #e4ebe6;
+  border-radius: 18px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+.riego-kicker {
+  margin: 0 0 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2a7a5c;
+}
+.riego-hero h2 {
+  margin: 0 0 6px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0d4f36;
+  letter-spacing: -0.02em;
+}
+.riego-hero > p {
+  margin: 0 0 10px;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.riego-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+.riego-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: #0d4f36;
+  box-shadow: 0 0 0 4px rgba(13, 79, 54, 0.15);
+  animation: riego-pulse 1.8s ease infinite;
+}
+@keyframes riego-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(13, 79, 54, 0.12); }
+  50% { box-shadow: 0 0 0 6px rgba(13, 79, 54, 0.06); }
+}
+.riego-card {
+  background: #fff;
+  border: 1px solid #e4ebe6;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+}
+.riego-card.is-disabled {
+  opacity: 0.92;
+}
+.riego-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.riego-card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  color: #0d4f36;
+}
+.riego-card-head span {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #64748b;
+}
+.riego-status-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.riego-ring {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  flex-shrink: 0;
+}
+.riego-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+.riego-ring-label strong {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 2.1rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.riego-ring-label span {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.riego-status-meta {
+  flex: 1;
+  min-width: 180px;
+}
+.riego-status-meta p {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.35;
+}
+.riego-chip {
+  display: inline-flex;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #ecf3ee;
+  color: #0d4f36;
+}
+.riego-chip[data-tone='danger'] {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.riego-chip[data-tone='warn'] {
+  background: #fff7ed;
+  color: #c9782a;
+}
+.riego-chip[data-tone='rain'] {
+  background: #ecfdf5;
+  color: #047857;
+}
+.riego-readings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.riego-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f7faf8;
+  border: 1px solid #e8eee9;
+}
+.riego-mini span {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+.riego-mini strong {
+  font-size: 1.05rem;
+  color: #0d4f36;
+  font-weight: 700;
+}
+.riego-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+}
+.riego-banner strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+.riego-banner p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.riego-banner.danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
+.riego-banner.warn {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+.riego-banner.rain,
+.riego-banner.ok {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+.riego-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.riego-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e4ebe6;
+  background: #f8faf9;
+  color: #475569;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.riego-btn.primary {
+  background: #0d4f36;
+  border-color: #0d4f36;
+  color: #fff;
+}
+.riego-btn.ghost {
+  background: #fff;
+}
+.riego-btn.wide {
+  width: 100%;
+  margin-top: 8px;
+}
+.riego-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.riego-disabled-hint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.riego-chart {
+  width: 100%;
+  min-height: 220px;
+}
+.riego-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.riego-slider span {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #475569;
+}
+.riego-slider input[type='range'] {
+  width: 100%;
+  accent-color: #0d4f36;
+}
+@media (max-width: 420px) {
+  .riego-readings,
+  .riego-actions {
+    grid-template-columns: 1fr;
+  }
+  .riego-status-top {
+    justify-content: center;
+  }
+}
