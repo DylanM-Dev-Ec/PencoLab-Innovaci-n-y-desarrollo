@@ -27,13 +27,49 @@ import AnotarLote from './AnotarLote'
 import { AppIcon } from '../components/AppIcon'
 
 const NAV = [
-  { path: '/productor/suelos', icon: 'tierra', label: 'Tierra' },
-  { path: '/productor/anotar', icon: 'anotar', label: 'Anotar' },
-  { path: '/productor/andina', icon: 'guia', label: 'Guía' },
-  { path: '/productor/circular', icon: 'abono', label: 'Circular' },
-  { path: '/productor/riqueza', icon: 'plata', label: 'Plan $' },
-  { path: '/productor/bitacora', icon: 'bitacora', label: 'Campo' },
+  {
+    path: '/productor/suelos',
+    icon: 'tierra',
+    label: 'Suelo',
+    desc: 'Mide el pH y prepara tu tierra antes de sembrar',
+  },
+  {
+    path: '/productor/anotar',
+    icon: 'anotar',
+    label: 'Lote',
+    desc: 'Registra un lote nuevo: plantas, surcos y ubicación',
+  },
+  {
+    path: '/productor/andina',
+    icon: 'guia',
+    label: 'Guía',
+    desc: 'Aprende paso a paso cómo sembrar el penco andino',
+  },
+  {
+    path: '/productor/circular',
+    icon: 'abono',
+    label: 'Residuos',
+    desc: 'Aprovecha fibra, hoja y kirillas: plata extra',
+  },
+  {
+    path: '/productor/riqueza',
+    icon: 'plata',
+    label: 'Plan',
+    desc: 'Calcula cuánto puedes ganar con tus hectáreas',
+  },
+  {
+    path: '/productor/bitacora',
+    icon: 'bitacora',
+    label: 'Diario',
+    desc: 'Anota riego, podas y cómo va el lote hoy',
+  },
 ]
+
+function navMatch(path, item) {
+  if (path === item.path) return true
+  if (item.path === '/productor/suelos' && path === '/productor/suelo') return true
+  return false
+}
 
 function loadCertPending() {
   try {
@@ -238,6 +274,7 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
   }
 
   const firstName = (data.productor.nombre || data.session.email || 'Agricultor').split(' ')[0].split('@')[0]
+  const activeNav = NAV.find((t) => navMatch(path, t))
 
   return (
     <div className="app-shell portal-productor m-app">
@@ -248,15 +285,17 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
         <div className="m-hello">
           <h1>Hola, {firstName}</h1>
           <p>
-            {online
-              ? apiOk
-                ? syncing
-                  ? 'Sincronizando…'
-                  : totalPending
-                    ? `${totalPending} por subir`
-                    : 'Conectado · auto-sync'
-                : 'Sin servidor'
-              : 'Modo campo · offline'}
+            {activeNav
+              ? activeNav.desc
+              : online
+                ? apiOk
+                  ? syncing
+                    ? 'Sincronizando…'
+                    : totalPending
+                      ? `${totalPending} por subir`
+                      : 'Conectado · auto-sync'
+                  : 'Sin servidor'
+                : 'Modo campo · offline'}
           </p>
         </div>
         <div className={`m-pill ${online ? 'ok' : 'off'}`} title={online ? 'En línea' : 'Sin red'}>
@@ -309,19 +348,31 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
           Salir
         </button>
       </main>
-      <nav className="m-dock" aria-label="Navegación">
+      <nav className="m-dock" aria-label="Menú del agricultor">
+        {activeNav && (
+          <p className="m-dock-hint" role="status">
+            <span className="m-dock-hint-label">{activeNav.label}</span>
+            {activeNav.desc}
+          </p>
+        )}
         <div className="m-dock-inner">
-          {NAV.map((t) => (
-            <button
-              key={t.path}
-              type="button"
-              className={`m-dock-btn ${path === t.path ? 'active' : ''}`}
-              onClick={() => navigate(t.path)}
-            >
-              <AppIcon name={t.icon} alt="" className="dock-ico" />
-              <span className="lbl">{t.label}</span>
-            </button>
-          ))}
+          {NAV.map((t) => {
+            const on = navMatch(path, t)
+            return (
+              <button
+                key={t.path}
+                type="button"
+                className={`m-dock-btn ${on ? 'active' : ''}`}
+                onClick={() => navigate(t.path)}
+                title={t.desc}
+                aria-label={`${t.label}: ${t.desc}`}
+                aria-current={on ? 'page' : undefined}
+              >
+                <AppIcon name={t.icon} alt="" className="dock-ico" />
+                <span className="lbl">{t.label}</span>
+              </button>
+            )
+          })}
         </div>
       </nav>
     </div>
@@ -488,7 +539,7 @@ function FormularioSuelos({ data, scope, onAdd }) {
           <div className="m-lote-actions">
             <button type="button" className="m-lote-qr" onClick={() => navigate('/productor/bitacora')}>
               <AppIcon name="bitacora" alt="" className="glyph-xs" />
-              Campo
+              Diario
             </button>
             <button type="button" className="m-lote-qr" onClick={() => navigate('/productor/qr')}>
               <AppIcon name="qr" alt="QR" className="glyph-xs" />

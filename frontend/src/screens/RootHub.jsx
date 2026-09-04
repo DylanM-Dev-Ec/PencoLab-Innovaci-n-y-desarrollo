@@ -165,13 +165,13 @@ export default function RootHub({
             <li>
               <AppIcon name="anotar" alt="" className="glyph-sm" />
               <span>
-                <strong>Anotar el lote</strong> con GPS, pH y estado — aunque no haya señal.
+                <strong>Registrar el lote</strong> con GPS, pH y estado — aunque no haya señal.
               </span>
             </li>
             <li>
               <AppIcon name="bitacora" alt="" className="glyph-sm" />
               <span>
-                <strong>Campo</strong>: riego, plagas y fotos pa no olvidar qué pasó.
+                <strong>Diario</strong>: riego, plagas y fotos pa no olvidar qué pasó.
               </span>
             </li>
             <li>

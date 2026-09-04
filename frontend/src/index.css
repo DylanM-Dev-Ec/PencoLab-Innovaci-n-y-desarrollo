@@ -1608,6 +1608,34 @@ body.agro-page {
   font-weight: 700;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
+.b2b-nav-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.25;
+}
+.b2b-nav-copy strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.b2b-nav-copy small {
+  font-size: 0.68rem;
+  font-weight: 500;
+  opacity: 0.78;
+  white-space: normal;
+}
+.b2b-nav button.on .b2b-nav-copy small {
+  opacity: 0.72;
+  color: inherit;
+}
+.b2b-page-desc {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
 .b2b-side-foot {
   display: flex;
   flex-direction: column;
@@ -1868,7 +1896,7 @@ body.agro-page {
   font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
 }
 .m-app .content {
-  padding: 4px 16px 28px;
+  padding: 4px 16px 120px;
 }
 .m-top {
   display: flex;
@@ -2568,6 +2596,31 @@ body.agro-page {
   width: min(440px, calc(100% - 20px));
   z-index: 100;
   pointer-events: none;
+}
+.m-dock-hint {
+  pointer-events: none;
+  margin: 0 0 8px;
+  padding: 9px 14px;
+  border-radius: 16px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 10px 28px rgba(13, 79, 54, 0.18);
+}
+.m-dock-hint-label {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--m-forest);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  vertical-align: baseline;
 }
 .m-dock-inner {
   pointer-events: auto;

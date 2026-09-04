@@ -172,7 +172,7 @@ export default function QrLote({ data, scope }) {
       {mode === 'generar' && (
         <>
           {!scope.parcelas.length ? (
-            <div className="m-toast warn">Primero crea un lote en Tierra</div>
+            <div className="m-toast warn">Primero crea un lote en Lote o Suelo</div>
           ) : (
             <div className="m-card">
               <select

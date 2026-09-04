@@ -362,10 +362,10 @@ export default function RegistroSiembraAndina({ setMsg }) {
               <li>Eso alimenta el carbono estimado vs verificado in situ.</li>
             </ul>
             <div className="guia-callout soft">
-              ¿Listo para registrar el lote? Usa la pestaña <strong>Anotar</strong> del menú inferior.
+              ¿Listo para registrar el lote? Usa la pestaña <strong>Lote</strong> del menú inferior.
             </div>
             <button type="button" className="m-btn" onClick={() => navigate('/productor/anotar')}>
-              Ir a Anotar lote
+              Ir a registrar lote
             </button>
           </div>
         )}

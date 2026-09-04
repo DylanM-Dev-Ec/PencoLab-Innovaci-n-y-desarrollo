@@ -46,7 +46,7 @@ export default function BitacoraMovil({ data, scope, onAdd }) {
   async function guardar(e) {
     e.preventDefault()
     if (!parcela) {
-      setMsg({ type: 'warn', text: 'Primero crea un lote en Tierra.' })
+      setMsg({ type: 'warn', text: 'Primero crea un lote en Lote o Suelo.' })
       return
     }
     setBusy(true)
@@ -122,7 +122,7 @@ export default function BitacoraMovil({ data, scope, onAdd }) {
 
       {msg && <div className={`m-toast ${msg.type}`}>{msg.text}</div>}
       {!parcelas.length && (
-        <div className="m-toast warn">Primero crea un lote en Tierra para poder registrar.</div>
+        <div className="m-toast warn">Primero crea un lote en Lote o Suelo para poder registrar.</div>
       )}
 
       <form className="m-card" onSubmit={guardar}>

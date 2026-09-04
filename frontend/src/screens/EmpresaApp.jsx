@@ -31,12 +31,42 @@ import { loadCampoSnapshot, CAMPO_SNAPSHOT_KEY } from '../store'
 import { buildProductorDemoSeed } from '../demoSeed'
 
 const NAV = [
-  { path: '/empresa', label: 'Pitch Corp', icon: IconGrid },
-  { path: '/empresa/costos', label: 'Costos', icon: IconTrend },
-  { path: '/empresa/circular', label: 'Economía circular', icon: IconCycle },
-  { path: '/empresa/eficiencia', label: 'Eficiencia MX', icon: IconLeaf },
-  { path: '/empresa/mapa', label: 'Mapa de parcelas', icon: IconMap },
-  { path: '/empresa/alertas', label: 'Alertas fito', icon: IconAlert },
+  {
+    path: '/empresa',
+    label: 'Resumen',
+    desc: 'Vista general del proyecto y proyección',
+    icon: IconGrid,
+  },
+  {
+    path: '/empresa/costos',
+    label: 'Costos',
+    desc: 'Cuánto cuesta producir por hectárea',
+    icon: IconTrend,
+  },
+  {
+    path: '/empresa/circular',
+    label: 'Residuos',
+    desc: 'Ingresos extra con fibra, hoja y kirillas',
+    icon: IconCycle,
+  },
+  {
+    path: '/empresa/eficiencia',
+    label: 'Método MX',
+    desc: 'Comparación con el protocolo mexicano',
+    icon: IconLeaf,
+  },
+  {
+    path: '/empresa/mapa',
+    label: 'Mapa',
+    desc: 'Ubicación de las parcelas del productor',
+    icon: IconMap,
+  },
+  {
+    path: '/empresa/alertas',
+    label: 'Alertas',
+    desc: 'Avisos de plagas y salud del cultivo',
+    icon: IconAlert,
+  },
 ]
 
 /** Valores de pitch hacia meta 15 t CO₂e y 3→20 ha */
@@ -163,6 +193,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
   }, [stats, parcelas, alertas])
 
   const pageTitle = NAV.find((n) => n.path === path)?.label || 'Resumen'
+  const pageDesc = NAV.find((n) => n.path === path)?.desc || ''
 
   return (
     <div className={`b2b-shell ${collapsed ? 'is-collapsed' : ''}`}>
@@ -178,7 +209,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
             </div>
           )}
         </div>
-        <nav className="b2b-nav">
+        <nav className="b2b-nav" aria-label="Menú empresa">
           {NAV.map((t) => {
             const Icon = t.icon
             const on = path === t.path
@@ -187,11 +218,18 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
                 key={t.path}
                 type="button"
                 className={on ? 'on' : ''}
-                title={t.label}
+                title={t.desc}
+                aria-label={`${t.label}: ${t.desc}`}
+                aria-current={on ? 'page' : undefined}
                 onClick={() => navigate(t.path)}
               >
                 <Icon />
-                {!collapsed && <span>{t.label}</span>}
+                {!collapsed && (
+                  <span className="b2b-nav-copy">
+                    <strong>{t.label}</strong>
+                    <small>{t.desc}</small>
+                  </span>
+                )}
               </button>
             )
           })}
@@ -217,6 +255,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
           <div>
             <p className="b2b-kicker">Pencos del Norte · auto-refresh 15s</p>
             <h1>{pageTitle}</h1>
+            {pageDesc ? <p className="b2b-page-desc">{pageDesc}</p> : null}
             {lastRefresh && (
               <p className="b2b-refresh-meta">
                 Actualizado {lastRefresh.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
