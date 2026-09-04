@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Component, useMemo, useState } from 'react'
 import { certificarLote, ensureProductor, syncPush } from '../api'
 import { AppIcon } from '../components/AppIcon'
 import { navigate } from '../routing'
@@ -9,30 +9,10 @@ import {
 } from '../store'
 
 const SCENES = [
-  {
-    id: 'hijuelo',
-    title: 'Elegir hijuelo',
-    tip: 'Como en el campo: mira, aprieta y mide antes de plantar',
-    icon: 'firme',
-  },
-  {
-    id: 'curar',
-    title: 'Curar el corte',
-    tip: 'Desinfectar, pasta y sol: el orden importa',
-    icon: 'sol',
-  },
-  {
-    id: 'trazar',
-    title: 'Trazar el lote',
-    tip: 'Surcos, calles y plata temprana con intercalado',
-    icon: 'surcos',
-  },
-  {
-    id: 'plantar',
-    title: 'Plantar firme',
-    tip: 'Profundidad y apisonado contra el viento de Carchi',
-    icon: 'apisonar',
-  },
+  { id: 'hijuelo', title: 'Elegir hijuelo', tip: 'Mira, aprieta y mide antes de plantar', icon: 'firme' },
+  { id: 'curar', title: 'Curar el corte', tip: 'Fuego, pasta y sol: el orden importa', icon: 'sol' },
+  { id: 'trazar', title: 'Trazar el lote', tip: 'Surcos, calles e intercalado', icon: 'surcos' },
+  { id: 'plantar', title: 'Plantar firme', tip: 'Profundidad y apisonado (viento Carchi)', icon: 'apisonar' },
 ]
 
 const INTERCALADOS = [
@@ -40,6 +20,8 @@ const INTERCALADOS = [
   { id: 'quinoa', label: 'Quinoa', icon: 'semilla' },
   { id: 'chocho', label: 'Chocho', icon: 'abono' },
 ]
+
+const EMPTY_SCOPE = { parcelas: [], plantas: [], mediciones: [], bitacora: [] }
 
 function loadCertPending() {
   try {
@@ -64,7 +46,7 @@ function Stepper({ value, onChange, min, max, step = 1, decimals = 0 }) {
         aria-label="menos"
         onClick={() => onChange(String(clamp(Number((n - step).toFixed(decimals)))))}
       >
-        −
+        -
       </button>
       <span>{decimals ? n.toFixed(decimals) : n}</span>
       <button
@@ -78,27 +60,60 @@ function Stepper({ value, onChange, min, max, step = 1, decimals = 0 }) {
   )
 }
 
+/** Evita pantalla verde si algo truena al renderizar. */
+export class GuiaErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="practica-guia practica-fallback">
+          <div className="m-card">
+            <h2>No se pudo abrir la práctica</h2>
+            <p className="practica-fallback-msg">{String(this.state.error?.message || this.state.error)}</p>
+            <button type="button" className="m-btn" onClick={() => navigate('/productor/andina')}>
+              Volver a la Guía
+            </button>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 /**
  * Guía interactiva de siembra — práctica guiada (no solo checks).
  */
-export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) {
+export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online, setMsg }) {
+  const scope = scopeProp && Array.isArray(scopeProp.parcelas) ? scopeProp : EMPTY_SCOPE
+  const parcelas = scope.parcelas
+  const safeData = data || { parcelas: [], plantas: [], session: {}, productor: {} }
+
   const [scene, setScene] = useState(0)
   const [certMsg, setCertMsg] = useState(null)
   const [saving, setSaving] = useState(false)
   const [packOrder, setPackOrder] = useState([])
   const [apisonPress, setApisonPress] = useState(0)
-  const [form, setForm] = useState({
-    parcela_id: scope.parcelas[0]?.id || '',
+  const [form, setForm] = useState(() => ({
+    parcela_id: parcelas[0]?.id || '',
     edad_madre: '4',
     peso: '2.0',
     roseta: '9.5',
-    firmeza: null, // 'firme' | 'bofo' | null
+    firmeza: null,
     entre_plantas_m: '1.5',
     intercalado: 'papa',
     profundidad: '3/4',
-  })
+  }))
 
-  const edadVal = parseFloat(form.edad_madre)
+  const edadVal = parseFloat(form.edad_madre) || 0
   const rosetaVal = parseFloat(form.roseta) || 0
   const pesoVal = parseFloat(form.peso) || 0
   const edadOk = edadVal >= 3 && edadVal <= 5
@@ -106,7 +121,11 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
   const pesoOk = pesoVal >= 1.5 && pesoVal <= 3.0
   const firmeOk = form.firmeza === 'firme'
   const apto = edadOk && rosetaOk && pesoOk && firmeOk
-  const dens = densidadPorSeparacion(form.entre_plantas_m)
+  const dens = densidadPorSeparacion(form.entre_plantas_m) || {
+    entre_plantas_m: 1.5,
+    entre_surcos_m: ESPACIO_SURCO_M,
+    plantas_por_ha: 2222,
+  }
 
   const cureDone =
     packOrder.includes('fuego') &&
@@ -116,10 +135,13 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
   const cureScore = ['fuego', 'corte', 'pasta', 'sol'].filter((k) => packOrder.includes(k)).length
   const cureOrderOk =
     packOrder.join(',') === 'fuego,corte,pasta,sol' ||
-    (cureDone && packOrder.indexOf('fuego') < packOrder.indexOf('corte') && packOrder.indexOf('corte') < packOrder.indexOf('pasta'))
+    (cureDone &&
+      packOrder.indexOf('fuego') < packOrder.indexOf('corte') &&
+      packOrder.indexOf('corte') < packOrder.indexOf('pasta'))
 
   const apisonOk = apisonPress >= 100
   const plantReady = apto && cureDone && apisonOk
+  const progressPct = Math.min(100, ((apto ? 1 : 0) + (cureDone ? 1 : 0) + (apisonOk ? 1 : 0)) * 34)
 
   const verdicto = useMemo(() => {
     if (form.firmeza === 'bofo') {
@@ -151,10 +173,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
   }, [edadOk, pesoOk, rosetaOk, firmeOk, form.firmeza])
 
   function togglePack(id) {
-    setPackOrder((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id)
-      return [...prev, id]
-    })
+    setPackOrder((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
   function pressApison() {
@@ -167,14 +186,14 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
     const incomplete = !plantReady
 
     let parcelaId = form.parcela_id
-    let nextParcelas = data.parcelas
+    let nextParcelas = safeData.parcelas || []
     if (!parcelaId) {
       parcelaId = crypto.randomUUID()
       nextParcelas = [
-        ...data.parcelas,
+        ...nextParcelas,
         {
           id: parcelaId,
-          productor_id: data.session.productor_id,
+          productor_id: safeData.session?.productor_id,
           nombre: 'Parcela guía práctica',
           ph: 6.5,
           fecha_establecimiento: new Date().toISOString().slice(0, 10),
@@ -190,7 +209,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
     onAdd({
       parcelas: nextParcelas,
       plantas: [
-        ...data.plantas,
+        ...(safeData.plantas || []),
         {
           id: plantaId,
           parcela_id: parcelaId,
@@ -204,7 +223,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
           metodo_desinfeccion: packOrder.includes('fuego') ? 'fuego' : 'pendiente',
           hijuelo_apto: Boolean(apto),
           estado: 'activa',
-          notas: `Guía práctica. Profundidad ${form.profundidad}. Surco ${ESPACIO_SURCO_M} m · planta ${dens.entre_plantas_m} m (${dens.plantas_por_ha}/ha). Intercalado: ${form.intercalado}.${incomplete ? ' Parcial.' : ' Completa.'}`,
+          notas: `Guía práctica. Profundidad ${form.profundidad}. Surco ${ESPACIO_SURCO_M} m · planta ${dens.entre_plantas_m} m. Intercalado: ${form.intercalado}.`,
           synced_at: null,
         },
       ],
@@ -223,31 +242,31 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
         type: 'warn',
         text: 'Guardado parcial. Completa firmeza, curación y apisonado cuando puedas.',
       })
-    } else if (online && data.session?.access_token) {
+    } else if (online && safeData.session?.access_token) {
       try {
         await ensureProductor(
           {
-            id: data.session.productor_id,
-            nombre: data.productor.nombre || data.session.email.split('@')[0],
-            email: data.session.email,
-            comunidad: data.productor.comunidad,
+            id: safeData.session.productor_id,
+            nombre: safeData.productor?.nombre || String(safeData.session.email || 'productor').split('@')[0],
+            email: safeData.session.email,
+            comunidad: safeData.productor?.comunidad,
             activo: true,
           },
-          data.session.access_token
+          safeData.session.access_token
         )
         await syncPush(
           {
-            productor_id: data.session.productor_id,
+            productor_id: safeData.session.productor_id,
             parcelas: nextParcelas
               .filter((p) => p.id === parcelaId)
-              .map((p) => ({ ...p, productor_id: data.session.productor_id })),
+              .map((p) => ({ ...p, productor_id: safeData.session.productor_id })),
             plantas: [],
             mediciones: [],
             bitacora: [],
           },
-          data.session.access_token
+          safeData.session.access_token
         )
-        const cert = await certificarLote(certPayload, data.session.access_token)
+        const cert = await certificarLote(certPayload, safeData.session.access_token)
         setCertMsg({
           type: cert.apto_pago_preferencial ? 'success' : 'warn',
           text: cert.mensaje || cert.estado,
@@ -270,7 +289,13 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
     setSaving(false)
   }
 
-  const current = SCENES[scene]
+  const current = SCENES[scene] || SCENES[0]
+  const cureSteps = [
+    { id: 'fuego', icon: 'fuego', title: '1. Cuchillo al fuego', detail: 'Desinfecta antes de cortar' },
+    { id: 'corte', icon: 'plantar', title: '2. Corte limpio', detail: 'Rizoma sin desgarrar' },
+    { id: 'pasta', icon: 'pasta', title: '3. Pasta sanitaria', detail: 'Fungicida + bactericida + insecticida' },
+    { id: 'sol', icon: 'sol', title: '4. Diez días al sol', detail: 'Cicatriza antes de enterrar' },
+  ]
 
   return (
     <div className="practica-guia">
@@ -282,15 +307,12 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
         <button type="button" className="practica-back" onClick={() => navigate('/productor/andina')}>
           ← Volver a Guía
         </button>
-        <p className="guia-kicker">Práctica de campo · Método mexicano adaptado</p>
+        <p className="guia-kicker">Práctica de campo</p>
         <h2>Guía interactiva</h2>
-        <p>
-          No es un examen de checks: decides como en la chacra. Cada escena te dice qué está bien y qué
-          conviene cambiar.
-        </p>
+        <p>Decides como en la chacra. Cada escena te dice qué está bien y qué conviene cambiar.</p>
         <div className="practica-score" aria-label="Avance">
           <div className="practica-score-bar">
-            <span style={{ width: `${((apto ? 1 : 0) + (cureDone ? 1 : 0) + (apisonOk ? 1 : 0)) * 33.34}%` }} />
+            <i style={{ width: `${progressPct}%` }} />
           </div>
           <small>
             {apto ? 'Hijuelo OK' : 'Hijuelo…'} · {cureDone ? 'Curación OK' : 'Curación…'} ·{' '}
@@ -309,7 +331,9 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
             className={`practica-scene-btn ${i === scene ? 'on' : ''}`}
             onClick={() => setScene(i)}
           >
-            <AppIcon name={s.icon} alt="" className="glyph-sm" />
+            <span className="practica-scene-ico" aria-hidden>
+              <AppIcon name={s.icon} alt="" className="glyph-sm" />
+            </span>
             <strong>{s.title}</strong>
           </button>
         ))}
@@ -317,7 +341,9 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
 
       <article className="m-card practica-panel">
         <div className="practica-panel-head">
-          <AppIcon name={current.icon} alt="" className="glyph-md" />
+          <span className="practica-scene-ico" aria-hidden>
+            <AppIcon name={current.icon} alt="" className="glyph-md" />
+          </span>
           <div>
             <span className="guia-num">
               Escena {scene + 1}/{SCENES.length}
@@ -329,7 +355,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
 
         {scene === 0 && (
           <div className="practica-body">
-            {scope.parcelas.length > 0 && (
+            {parcelas.length > 0 && (
               <label className="practica-label">
                 Lote donde vas a plantar
                 <select
@@ -337,9 +363,9 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                   value={form.parcela_id}
                   onChange={(e) => setForm({ ...form, parcela_id: e.target.value })}
                 >
-                  {scope.parcelas.map((p) => (
+                  {parcelas.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.nombre}
+                      {p.nombre || 'Lote'}
                     </option>
                   ))}
                 </select>
@@ -353,7 +379,9 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                 className={`practica-choice good ${form.firmeza === 'firme' ? 'on' : ''}`}
                 onClick={() => setForm({ ...form, firmeza: 'firme' })}
               >
-                <AppIcon name="firme" alt="" className="glyph-md" />
+                <span className="practica-scene-ico" aria-hidden>
+                  <AppIcon name="firme" alt="" className="glyph-md" />
+                </span>
                 <strong>Firme</strong>
                 <span>Duro, vivo, sin huecos</span>
               </button>
@@ -362,14 +390,16 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                 className={`practica-choice bad ${form.firmeza === 'bofo' ? 'on' : ''}`}
                 onClick={() => setForm({ ...form, firmeza: 'bofo' })}
               >
-                <AppIcon name="alerta" alt="" className="glyph-md" />
+                <span className="practica-scene-ico" aria-hidden>
+                  <AppIcon name="alerta" alt="" className="glyph-md" />
+                </span>
                 <strong>Bofo</strong>
                 <span>Esponjoso · descartar</span>
               </button>
             </div>
 
             <div className="m-hero-num">
-              <span>Edad de la madre · años {edadOk ? '✓' : 'ideal 3–5'}</span>
+              <span>Edad de la madre · años {edadOk ? 'OK' : 'ideal 3–5'}</span>
               <Stepper
                 value={form.edad_madre}
                 min={1}
@@ -380,7 +410,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
               />
             </div>
             <div className="m-hero-num">
-              <span>Roseta · cm {rosetaOk ? '✓' : 'ideal 8–11'}</span>
+              <span>Roseta · cm {rosetaOk ? 'OK' : 'ideal 8–11'}</span>
               <div className="m-ph-big">{rosetaVal.toFixed(1)}</div>
               <input
                 type="range"
@@ -392,7 +422,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
               />
             </div>
             <div className="m-hero-num">
-              <span>Peso · kg {pesoOk ? '✓' : 'ideal 1.5–3'}</span>
+              <span>Peso · kg {pesoOk ? 'OK' : 'ideal 1.5–3'}</span>
               <Stepper
                 value={form.peso}
                 min={0.5}
@@ -414,12 +444,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
           <div className="practica-body">
             <p className="practica-ask">Haz los pasos en orden (como en la parcela):</p>
             <ol className="practica-seq">
-              {[
-                { id: 'fuego', icon: 'fuego', title: '1. Cuchillo al fuego', detail: 'Desinfecta antes de cortar' },
-                { id: 'corte', icon: 'plantar', title: '2. Corte limpio', detail: 'Rizoma sin desgarrar' },
-                { id: 'pasta', icon: 'pasta', title: '3. Pasta sanitaria', detail: 'Fungicida + bactericida + insecticida' },
-                { id: 'sol', icon: 'sol', title: '4. Diez días al sol', detail: 'Cicatriza antes de enterrar' },
-              ].map((step, idx) => {
+              {cureSteps.map((step, idx) => {
                 const done = packOrder.includes(step.id)
                 const expected = ['fuego', 'corte', 'pasta', 'sol'][packOrder.length]
                 const nextHint = !done && step.id === expected
@@ -430,12 +455,14 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                       className={`practica-seq-btn ${done ? 'done' : ''} ${nextHint ? 'next' : ''}`}
                       onClick={() => togglePack(step.id)}
                     >
-                      <AppIcon name={step.icon} alt="" className="glyph-sm" />
+                      <span className="practica-scene-ico" aria-hidden>
+                        <AppIcon name={step.icon} alt="" className="glyph-sm" />
+                      </span>
                       <span>
                         <strong>{step.title}</strong>
                         <small>{step.detail}</small>
                       </span>
-                      <em>{done ? '✓' : nextHint ? 'ahora' : idx + 1}</em>
+                      <em>{done ? 'OK' : nextHint ? 'ahora' : idx + 1}</em>
                     </button>
                   </li>
                 )
@@ -449,9 +476,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                     : 'Hecho, pero el orden ideal es fuego → corte → pasta → sol'
                   : `Avance ${cureScore}/4 · toca el paso marcado “ahora”`}
               </strong>
-              <p>
-                Enterrar fresco pudre la piña. El sol de 10 días es el seguro más barato del lote.
-              </p>
+              <p>Enterrar fresco pudre la piña. El sol de 10 días es el seguro más barato del lote.</p>
             </div>
           </div>
         )}
@@ -475,7 +500,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
             </div>
             <div className="m-hero-num">
               <span>Distancia entre pencos</span>
-              <div className="m-ph-big">{dens.entre_plantas_m.toFixed(1)} m</div>
+              <div className="m-ph-big">{Number(dens.entre_plantas_m).toFixed(1)} m</div>
               <input
                 type="range"
                 min="1"
@@ -485,7 +510,8 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                 onChange={(e) => setForm({ ...form, entre_plantas_m: e.target.value })}
               />
               <p>
-                Surcos a {ESPACIO_SURCO_M} m · dens. aprox. {dens.plantas_por_ha.toLocaleString()} plantas/ha
+                Surcos a {ESPACIO_SURCO_M} m · dens. aprox. {Number(dens.plantas_por_ha).toLocaleString()}{' '}
+                plantas/ha
               </p>
             </div>
             <p className="practica-ask">¿Qué metes en las calles el primer año?</p>
@@ -497,7 +523,9 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                   className={`practica-choice ${form.intercalado === opt.id ? 'on' : ''}`}
                   onClick={() => setForm({ ...form, intercalado: opt.id })}
                 >
-                  <AppIcon name={opt.icon} alt="" className="glyph-sm" />
+                  <span className="practica-scene-ico" aria-hidden>
+                    <AppIcon name={opt.icon} alt="" className="glyph-sm" />
+                  </span>
                   <strong>{opt.label}</strong>
                 </button>
               ))}
@@ -505,8 +533,8 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
             <div className="practica-verdict ok">
               <strong>Plata temprana mientras crece el penco</strong>
               <p>
-                Las calles de ~{ESPACIO_SURCO_M} m no son “espacio perdido”: ahí va {form.intercalado} el primer
-                año y el penco no se ahoga.
+                Las calles de ~{ESPACIO_SURCO_M} m no son espacio perdido: ahí va {form.intercalado} el primer
+                año.
               </p>
             </div>
           </div>
@@ -528,7 +556,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                 <path d="M140 64 L96 34 L136 48 Z" fill="#9ccc65" />
                 <path d="M140 64 L184 32 L144 48 Z" fill="#9ccc65" />
                 <text x="12" y="24" fill="#0d4f36" fontSize="13" fontWeight="700">
-                  {form.profundidad === '3/4' ? '¾ de la piña enterrada' : '½ piña (mínimo)'}
+                  {form.profundidad === '3/4' ? '3/4 de la piña enterrada' : '1/2 piña (mínimo)'}
                 </text>
               </svg>
             </div>
@@ -539,14 +567,14 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
                 className={`m-chip ${form.profundidad === '1/2' ? 'on' : ''}`}
                 onClick={() => setForm({ ...form, profundidad: '1/2' })}
               >
-                ½ piña
+                1/2 piña
               </button>
               <button
                 type="button"
                 className={`m-chip ${form.profundidad === '3/4' ? 'on' : ''}`}
                 onClick={() => setForm({ ...form, profundidad: '3/4' })}
               >
-                ¾ piña (recomendado)
+                3/4 piña (recomendado)
               </button>
             </div>
 
@@ -556,10 +584,12 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
               className={`practica-apison ${apisonOk ? 'done' : ''}`}
               onClick={pressApison}
             >
-              <AppIcon name="apisonar" alt="" className="glyph-lg" />
+              <span className="practica-scene-ico lg" aria-hidden>
+                <AppIcon name="apisonar" alt="" className="glyph-lg" />
+              </span>
               <strong>{apisonOk ? 'Bien firme' : 'Toca para apisonar'}</strong>
               <div className="practica-apison-bar">
-                <span style={{ width: `${apisonPress}%` }} />
+                <i style={{ width: `${apisonPress}%` }} />
               </div>
               <small>{apisonPress}% · el viento de Carchi tumba hijuelos flojos</small>
             </button>
@@ -568,7 +598,7 @@ export default function GuiaInteractiva({ data, scope, onAdd, online, setMsg }) 
               <strong>{plantReady ? 'Listo para guardar la planta' : 'Aún falta algo'}</strong>
               <p>
                 {plantReady
-                  ? 'Hijuelo bueno, curación hecha y tierra apisonada. Puedes guardar o ir a registrar el lote.'
+                  ? 'Hijuelo bueno, curación hecha y tierra apisonada.'
                   : 'Completa hijuelo apto, los 4 pasos de curación y el apisonado al 100%.'}
               </p>
             </div>

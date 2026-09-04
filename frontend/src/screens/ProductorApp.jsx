@@ -21,7 +21,7 @@ import CalculadoraRiquezaFutura, { flushPlanesAccion } from '../components/Calcu
 import BitacoraCampo from './BitacoraCampo'
 import AnalisisCostos from './AnalisisCostos'
 import AnotarLote from './AnotarLote'
-import GuiaInteractiva from './GuiaInteractiva'
+import GuiaInteractiva, { GuiaErrorBoundary } from './GuiaInteractiva'
 import { AppIcon } from '../components/AppIcon'
 
 const NAV = [
@@ -66,6 +66,9 @@ const NAV = [
 function navMatch(path, item) {
   if (path === item.path) return true
   if (item.path === '/productor/suelos' && path === '/productor/suelo') return true
+  if (item.path === '/productor/andina' && (path === '/productor/practica' || path === '/productor/metodo')) {
+    return true
+  }
   return false
 }
 
@@ -316,13 +319,15 @@ export default function ProductorApp({ data, persist, online, apiOk, onLogout, o
           <RegistroSiembraAndina setMsg={setMsg} />
         )}
         {(path === '/productor/practica' || path === '/productor/metodo') && (
-          <GuiaInteractiva
-            data={data}
-            scope={scope}
-            onAdd={addRecords}
-            online={online}
-            setMsg={setMsg}
-          />
+          <GuiaErrorBoundary>
+            <GuiaInteractiva
+              data={data}
+              scope={scope}
+              onAdd={addRecords}
+              online={online}
+              setMsg={setMsg}
+            />
+          </GuiaErrorBoundary>
         )}
         {path === '/productor/anotar' && (
           <AnotarLote data={data} onAdd={addRecords} setMsg={setMsg} />
