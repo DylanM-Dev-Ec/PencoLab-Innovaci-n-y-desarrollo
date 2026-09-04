@@ -70,7 +70,7 @@ export default function ModelosEmpresaHub({ campoData }) {
         <h2>Calculadoras del portafolio</h2>
         <p>
           Cuatro fórmulas alimentadas por el snapshot de campo
-          {campoData?.from_snapshot ? ' (datos del productor)' : ' (demo Carchi)'}. Son las mismas que
+          {campoData?.from_snapshot ? ' (datos del productor)' : ' (datos de ejemplo)'}. Son las mismas que
           alimentan Resumen; aquí ajustas sliders para sensibilizar.
         </p>
       </header>

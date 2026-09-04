@@ -208,7 +208,7 @@ export default function RootHub({
                 </button>
                 {onReloadDemo && (
                   <button type="button" className="welcome-cta ghost" onClick={onReloadDemo}>
-                    Recargar demo Carchi
+                    Recargar demo
                   </button>
                 )}
                 <button type="button" className="welcome-cta ghost" onClick={onLogout}>
@@ -283,13 +283,13 @@ export default function RootHub({
             <HelpQ
               open={tipOpen === 'clave'}
               onToggle={() => toggleTip('clave')}
-              text="Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa carga datos de ejemplo de Carchi."
+              text="Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa carga datos de ejemplo."
             />
           </p>
           {tipOpen === 'clave' && (
             <p className="welcome-inline-tip center">
               Es la clave de prueba del hackathon. Un clic en Agricultor o Empresa carga datos de
-              ejemplo de Carchi.
+              ejemplo.
             </p>
           )}
 

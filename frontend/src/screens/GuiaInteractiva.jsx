@@ -12,7 +12,7 @@ const SCENES = [
   { id: 'hijuelo', title: 'Elegir hijuelo', tip: 'Mira, aprieta y mide antes de plantar', icon: 'firme' },
   { id: 'curar', title: 'Curar el corte', tip: 'Fuego, pasta y sol: el orden importa', icon: 'sol' },
   { id: 'trazar', title: 'Trazar el lote', tip: 'Surcos, calles e intercalado', icon: 'surcos' },
-  { id: 'plantar', title: 'Plantar firme', tip: 'Profundidad y apisonado (viento Carchi)', icon: 'apisonar' },
+  { id: 'plantar', title: 'Plantar firme', tip: 'Profundidad y apisonado (viento de ladera)', icon: 'apisonar' },
 ]
 
 const INTERCALADOS = [
@@ -591,7 +591,7 @@ export default function GuiaInteractiva({ data, scope: scopeProp, onAdd, online,
               <div className="practica-apison-bar">
                 <i style={{ width: `${apisonPress}%` }} />
               </div>
-              <small>{apisonPress}% · el viento de Carchi tumba hijuelos flojos</small>
+              <small>{apisonPress}% · el viento de ladera tumba hijuelos flojos</small>
             </button>
 
             <div className={`practica-verdict ${plantReady ? 'ok' : 'warn'}`}>

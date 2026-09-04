@@ -297,7 +297,7 @@ export default function EmpresaApp({ token, email, onLogout, onHome }) {
                 ? ` · Actualizado ${new Date(campoData.updated_at).toLocaleString('es-EC')}`
                 : ''
               : ' · Mostrando demo de campo hasta que el productor registre datos.'}
-            {demo ? ' Dashboard geo de referencia Carchi mientras sincroniza.' : ''}
+            {demo ? ' Mostrando mapa de referencia mientras sincroniza.' : ''}
           </div>
 
           {path === '/empresa' && (

@@ -1,4 +1,4 @@
-/** Datos de ejemplo Carchi para demostrar el portal productor y empresa. */
+/** Datos de ejemplo para demostrar el portal productor y empresa. */
 
 function id(suffix) {
   // UUIDs estables para demos (válidos para sync)
@@ -395,7 +395,7 @@ export function buildProductorDemoSeed(auth = {}) {
         productor_id: productorId,
         hectareas_planificadas: 3,
         cultivo_intercalado_elegido: 'papa',
-        cultivo_intercalado_label: 'Papas del Carchi',
+        cultivo_intercalado_label: 'Papas intercaladas',
         fecha_inicio_plan: HOY,
         densidad_plantas_ha: 1000,
         plantas_totales: 3000,

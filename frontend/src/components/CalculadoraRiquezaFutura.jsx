@@ -13,7 +13,7 @@ export const DENSIDAD_ALTA_HA = 2222
 const INTERCALADOS = [
   {
     id: 'papa',
-    label: 'Papas del Carchi',
+    label: 'Papas intercaladas',
     usd_ha_6m: 1200,
     icon: 'papa',
     hint: 'Ingreso temprano en calles de 3 m · primera cosecha ~6 meses',

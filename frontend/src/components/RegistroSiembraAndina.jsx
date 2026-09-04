@@ -39,7 +39,7 @@ const CHAPTERS = [
     id: 'plantar',
     icon: 'apisonar',
     title: 'Cómo plantar',
-    lead: 'Profundidad, apisonado y calles: lo que hace la diferencia en Carchi.',
+    lead: 'Profundidad, apisonado y calles: lo que hace la diferencia en ladera.',
   },
   {
     id: 'riego',
@@ -155,7 +155,7 @@ export default function RegistroSiembraAndina({ setMsg }) {
               </li>
               <li>
                 <strong>Zanjas / terrazas:</strong> abren un escalón que retiene humedad y materia orgánica.
-                Ideal en Carchi.
+                Ideal en terrenos andinos.
               </li>
               <li>
                 <strong>Plano:</strong> solo si no hay riesgo de encharque. El penco odia raíz ahogada.
@@ -333,7 +333,7 @@ export default function RegistroSiembraAndina({ setMsg }) {
                 cogollo.
               </li>
               <li>
-                <strong>Apisona</strong> bien alrededor: el viento de Carchi tumba hijuelos flojos.
+                <strong>Apisona</strong> bien alrededor: el viento de ladera tumba hijuelos flojos.
               </li>
               <li>
                 Surcos a ~3 m; entre plantas 1.0–1.5 m. Deja calles para papa o quinoa el primer año.

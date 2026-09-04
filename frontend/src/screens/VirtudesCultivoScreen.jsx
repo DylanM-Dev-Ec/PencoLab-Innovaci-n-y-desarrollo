@@ -35,7 +35,7 @@ export default function VirtudesCultivoScreen() {
     <div className="virtudes-screen">
       <header className="virtudes-hero">
         <AppIcon name="penco" alt="" className="glyph-lg" />
-        <p className="virtudes-kicker">Pencos del Norte · Carchi</p>
+        <p className="virtudes-kicker">Pencos del Norte · Agave Andino</p>
         <h2>¿Por qué sembrar penco?</h2>
         <p>
           Compara con eucalipto y ganadería tradicional: más retorno, menos daño al suelo y beneficios
@@ -136,7 +136,7 @@ function TabAmbiental() {
   return (
     <section className="virtudes-section">
       <h3>Cuidado de la tierra</h3>
-      <p className="virtudes-lead">Qué deja cada opción en el suelo del Carchi.</p>
+      <p className="virtudes-lead">Qué deja cada opción en el suelo del lote.</p>
 
       <div className="virtudes-table rounded-2xl">
         <div className="virtudes-table-head">
@@ -183,7 +183,7 @@ function TabAmbiental() {
           </div>
           <p>
             Planta rústica: sin riego constante, sin abono químico ni pesticidas. Se siembra en
-            laderas y terrazas con zanjas — cerca viva que frena la erosión del Carchi.
+            laderas y terrazas con zanjas — cerca viva que frena la erosión.
           </p>
         </article>
       </div>

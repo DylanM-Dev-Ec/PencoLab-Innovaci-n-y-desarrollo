@@ -88,7 +88,7 @@ def seed_owner_accounts() -> None:
 
 
 def _seed_demo_parcelas(db: Session, productor: Productor) -> None:
-    """Datos de pitch Carchi: parcelas GPS, carbono estimado/verificado, scouting."""
+    """Datos de pitch: parcelas GPS, carbono estimado/verificado, scouting."""
     if db.query(Parcela).filter(Parcela.nombre == "Finca El Ángel", Parcela.productor_id == productor.id).first():
         return
 
